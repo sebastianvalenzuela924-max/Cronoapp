@@ -16,7 +16,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=15" />
+<link rel="stylesheet" href="style.css?v=16" />
 </head>
 <body>
 
@@ -143,7 +143,12 @@
   <aside class="drawer" id="drawer">
     <div class="drawer-inner">
       <button class="drawer-close" id="drawerClose" aria-label="Cerrar">✕</button>
-      <div class="drawer-eyebrow" id="drawerCat">Sistema</div>
+      <div class="drawer-eyebrow-row">
+        <div class="drawer-eyebrow" id="drawerCat">Sistema</div>
+        <button class="drawer-goto" id="drawerGoto" aria-label="Ver en Sistemas" title="Ver en Sistemas">
+          <svg viewBox="0 0 24 24" width="14" height="14"><path d="M9 5l7 7-7 7" stroke="currentColor" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
       <h2 id="drawerName">—</h2>
       <div class="drawer-state" id="drawerState">—</div>
       <div class="drawer-rows">
@@ -204,11 +209,6 @@
       <button class="overview-close" id="overviewClose" aria-label="Cerrar">✕</button>
     </div>
     <div class="overview-list" id="overviewList">
-      <div class="overview-ruler" id="overviewRuler">
-        <div class="overview-ruler-spacer"></div>
-        <div class="overview-ruler-track"></div>
-        <div class="overview-ruler-chev-spacer"></div>
-      </div>
       <div class="overview-rows" id="overviewRows"></div>
     </div>
   </div>
@@ -237,7 +237,7 @@
 <script src="data.js"></script>
 <script src="data-sf2-electrico.js"></script>
 <script src="data-sf2-instrumentacion.js"></script>
-<script src="app.js?v=7"></script>
+<script src="app.js?v=8"></script>
 <script src="cronogramas.js"></script>
 <script src="main.js?v=2"></script>
 </body>

@@ -503,7 +503,9 @@ window.initCronoApp = function(DATA){
     window.scrollTo({ top, behavior: smooth ? 'smooth' : 'auto' });
   }
 
+  let currentDrawerTask = null;
   function openDrawer(t, now){
+    currentDrawerTask = t;
     const catIdx = DATA.categories.findIndex(c => c.id === t.category);
     const cat = DATA.categories[catIdx];
     const all = tasksByCat[t.category] || [];
@@ -538,30 +540,22 @@ window.initCronoApp = function(DATA){
   drawerClose.addEventListener('click', closeDrawer);
   drawerBackdrop.addEventListener('click', closeDrawer);
 
+  $('drawerGoto').addEventListener('click', () => {
+    if (!currentDrawerTask) return;
+    const catId = currentDrawerTask.category;
+    closeDrawer();
+    closeOverview();
+    goToSystem(catId);
+  });
+
   // ===== Panorama general: todos los sistemas en una sola línea de tiempo =====
   const btnOverview = $('btnOverview');
   const overviewPanel = $('overviewPanel');
   const overviewClose = $('overviewClose');
-  const overviewRuler = $('overviewRuler');
   const overviewRows = $('overviewRows');
   let overviewOpen = false;
 
   const overviewOpenCats = new Set();
-
-  function renderOverviewRuler(){
-    const track = overviewRuler.querySelector('.overview-ruler-track');
-    track.innerHTML = '';
-    DAY_SEGMENTS.forEach(seg => {
-      const left = pct(seg.start);
-      const width = pct(seg.end) - left;
-      if (width < 6) return;
-      const el = document.createElement('div');
-      el.className = 'overview-ruler-day';
-      el.style.left = left + '%';
-      el.textContent = seg.label + ' ' + String(seg.date).padStart(2, '0');
-      track.appendChild(el);
-    });
-  }
 
   function renderOverview(now){
     overviewRows.innerHTML = '';
@@ -569,6 +563,9 @@ window.initCronoApp = function(DATA){
       const all = tasksByCat[cat.id] || [];
       if (!all.length) return;
       const isOpen = overviewOpenCats.has(cat.id);
+      const activeCount = all.filter(t => stateOf(t, now) === 'active').length;
+      const doneCount = all.filter(t => stateOf(t, now) === 'done').length;
+      const upcomingCount = all.length - activeCount - doneCount;
 
       const row = document.createElement('div');
       row.className = 'overview-row' + (isOpen ? ' open' : '');
@@ -576,7 +573,10 @@ window.initCronoApp = function(DATA){
         <div class="overview-row-head">
           <div class="overview-row-label">
             <span class="icon">${cat.icon}</span>
-            <span class="name">${cat.label}</span>
+            <div class="label-text">
+              <span class="name">${cat.label}</span>
+              <span class="stats"><b class="s-active">${activeCount}</b>/<b class="s-done">${doneCount}</b>/<b class="s-upcoming">${upcomingCount}</b></span>
+            </div>
           </div>
           <div class="overview-bar-wrap"></div>
           <svg class="overview-chev" viewBox="0 0 24 24" width="14" height="14"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -638,7 +638,6 @@ window.initCronoApp = function(DATA){
 
   function openOverview(){
     overviewOpen = true;
-    renderOverviewRuler();
     renderOverview(scrubTime);
     overviewPanel.classList.add('show');
   }

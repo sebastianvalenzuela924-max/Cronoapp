@@ -540,7 +540,14 @@ body{
   position:absolute; top:-2px; right:0; background: var(--muted-soft); border:none; color: var(--text-dim);
   font-size:15px; cursor:pointer; padding:8px 10px; border-radius:999px; font-weight:700;
 }
-.drawer-eyebrow{ font-size:11.5px; font-weight:800; color: var(--text-faint); letter-spacing:.6px; text-transform:uppercase; padding-right:46px; }
+.drawer-eyebrow-row{ display:flex; align-items:center; gap:8px; padding-right:44px; }
+.drawer-eyebrow{ flex:1; min-width:0; font-size:11.5px; font-weight:800; color: var(--text-faint); letter-spacing:.6px; text-transform:uppercase; }
+.drawer-goto{
+  flex:none; width:24px; height:24px; border-radius:50%;
+  border:1.5px solid var(--border); background: var(--bg-soft); color: var(--text-dim);
+  display:flex; align-items:center; justify-content:center; cursor:pointer;
+}
+.drawer-goto:active{ background: var(--brand-soft); color: var(--brand); border-color: var(--brand); }
 .drawer #drawerName{ margin: 5px 0 10px; font-size:21px; font-weight:800; line-height:1.3; padding-right:46px; }
 .drawer-state{
   display:inline-block; font-size:12px; font-weight:800;
@@ -631,20 +638,6 @@ body{
   background: var(--muted-soft); border:none; color: var(--text-dim);
   font-size:15px; cursor:pointer; padding:8px 10px; border-radius:999px; font-weight:700;
 }
-/* El ruler usa el mismo layout (spacer + track flex:1) que cada fila, para
-   que las fechas queden exactamente sobre la misma escala que las barras. */
-.overview-ruler{
-  position:sticky; top:0; z-index:3;
-  display:flex; align-items:flex-end; gap:10px; padding:8px 18px 6px;
-  background: var(--bg); border-bottom:1px solid var(--border);
-}
-.overview-ruler-spacer{ flex:none; width:132px; }
-.overview-ruler-track{ position:relative; flex:1; min-width:0; height:16px; }
-.overview-ruler-chev-spacer{ flex:none; width:14px; }
-.overview-ruler-day{
-  position:absolute; bottom:0; font-size:10.5px; font-weight:800; color: var(--text-faint);
-  white-space:nowrap; border-left:1px solid var(--border); padding-left:6px;
-}
 .overview-list{ flex:1; overflow-y:auto; padding: 4px 0 max(150px, calc(130px + env(safe-area-inset-bottom))); }
 .overview-row{ border-bottom:1px solid var(--grid); }
 .overview-row-head{
@@ -654,11 +647,18 @@ body{
 .overview-row-head:hover{ background: var(--bg-soft); }
 .overview-row-label{
   flex:none; width:132px; display:flex; align-items:center; gap:6px;
-  font-size:12px; font-weight:700; color: var(--text-dim);
   overflow:hidden;
 }
 .overview-row-label .icon{ flex:none; font-size:13px; }
-.overview-row-label .name{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.overview-row-label .label-text{ display:flex; flex-direction:column; gap:1px; min-width:0; overflow:hidden; }
+.overview-row-label .name{
+  font-size:12px; font-weight:700; color: var(--text-dim);
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+.overview-row-label .stats{ font-size:10px; font-weight:800; letter-spacing:.2px; color: var(--text-faint); }
+.overview-row-label .stats .s-active{ color: var(--warning); }
+.overview-row-label .stats .s-done{ color: var(--success); }
+.overview-row-label .stats .s-upcoming{ color: var(--upcoming); }
 .overview-bar-wrap{
   position:relative; flex:1; min-width:0; height:20px;
   background: var(--bg-soft); border-radius:5px; overflow:hidden;
@@ -675,7 +675,7 @@ body{
 }
 .overview-chev{ flex:none; color: var(--text-faint); transition: transform .2s ease; }
 .overview-row.open .overview-chev{ transform: rotate(180deg); }
-.overview-tasklist{ display:none; flex-direction:column; padding: 0 18px 8px 160px; }
+.overview-tasklist{ display:none; flex-direction:column; padding: 0 18px 8px 18px; }
 .overview-row.open .overview-tasklist{ display:flex; }
 .overview-task{
   display:flex; align-items:center; gap:8px; padding:6px 0; cursor:pointer;
@@ -731,8 +731,6 @@ body{
   }
   .overview-panel.show{ transform: translate(-50%, 0); }
   .overview-row-label{ width:200px; }
-  .overview-ruler-spacer{ width:200px; }
-  .overview-tasklist{ padding-left:228px; }
 }
 @media (max-width: 360px){
   :root{ --frozen-w: 132px; }
