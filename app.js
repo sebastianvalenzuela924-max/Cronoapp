@@ -1,13 +1,12 @@
-(function(){
+window.initCronoApp = function(DATA){
   'use strict';
 
-  const DATA = CRONO_DATA;
   const WINDOW_START = new Date(DATA.windowStart);
   const WINDOW_END = new Date(DATA.windowEnd);
   const WINDOW_MS = WINDOW_END - WINDOW_START;
-  const MASTER = DATA.master;
-  MASTER._start = new Date(MASTER.start);
-  MASTER._end = new Date(MASTER.end);
+  const MASTER = DATA.master
+    ? { _start: new Date(DATA.master.start), _end: new Date(DATA.master.end) }
+    : { _start: WINDOW_START, _end: WINDOW_END };
 
   const PALETTE = [
     '#F43F5E','#FB923C','#F59E0B','#EAB308','#84CC16','#22C55E','#10B981',
@@ -46,8 +45,9 @@
     tasksByCat[t.category].push(t);
   });
   const byId = {}; DATA.tasks.forEach(t => byId[t.id] = t);
-  const OUTAGE_START = byId[7]._start;
-  const OUTAGE_END = byId[7]._end;
+  const OUTAGE_TASK = DATA.master && byId[7] ? byId[7] : null;
+  const OUTAGE_START = OUTAGE_TASK ? OUTAGE_TASK._start : null;
+  const OUTAGE_END = OUTAGE_TASK ? OUTAGE_TASK._end : null;
 
   function pct(d){
     return Math.max(0, Math.min(100, ((d - WINDOW_START) / WINDOW_MS) * 100));
@@ -488,14 +488,14 @@
   const shareQr = $('shareQr');
 
   function currentShareUrl(){
-    return window.location.origin + window.location.pathname;
+    return window.location.origin + window.location.pathname + window.location.search;
   }
 
   function openShare(){
     const url = currentShareUrl();
     const display = url.replace(/^https?:\/\//, '');
     shareUrlText.textContent = display;
-    const msg = 'Mira el cronograma en vivo del corte de energía: ' + url;
+    const msg = 'Mira el cronograma en vivo: ' + url;
     btnShareWsp.href = 'https://wa.me/?text=' + encodeURIComponent(msg);
     shareQr.src = 'https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=' + encodeURIComponent(url);
     btnCopyLink.textContent = 'Copiar';
@@ -573,12 +573,6 @@
     refreshInstallUI();
   });
 
-  if ('serviceWorker' in navigator){
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('service-worker.js').catch(() => {});
-    });
-  }
-
   function updateChrome(now){
     hdrClock.textContent = fmtTime(new Date());
     const in2h = new Date(now.getTime() + 2*3600000);
@@ -594,13 +588,13 @@
     let phase, hdrClass, label;
     if (now < WINDOW_START){
       const days = Math.ceil((WINDOW_START - now)/86400000);
-      phase = 'Antes del corte'; hdrClass = 'state-soon'; label = `Inicia en ${days} día${days===1?'':'s'}`;
-    } else if (now < OUTAGE_START){
+      phase = 'Antes de iniciar'; hdrClass = 'state-soon'; label = `Inicia en ${days} día${days===1?'':'s'}`;
+    } else if (OUTAGE_START && now < OUTAGE_START){
       phase = 'Preparación'; hdrClass = 'state-soon'; label = 'Trabajos previos';
-    } else if (now < OUTAGE_END){
+    } else if (OUTAGE_START && OUTAGE_END && now < OUTAGE_END){
       phase = 'Corte total de energía'; hdrClass = 'state-outage'; label = 'Sin energía SF1 · SF2';
     } else if (now < MASTER._end){
-      phase = 'Restableciendo energía'; hdrClass = 'state-soon'; label = 'Reenergizando';
+      phase = OUTAGE_START ? 'Restableciendo energía' : 'En ejecución'; hdrClass = OUTAGE_START ? 'state-soon' : 'state-live'; label = OUTAGE_START ? 'Reenergizando' : 'En curso';
     } else {
       phase = 'Programa finalizado'; hdrClass = 'state-live'; label = 'Completado';
     }
@@ -777,5 +771,4 @@
   updateChrome(scrubTime);
   renderActiveView(scrubTime);
   syncHeaderHeight();
-
-})();
+};

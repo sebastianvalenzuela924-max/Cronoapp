@@ -1,5 +1,8 @@
-const CACHE_NAME = 'cronoapp-v1';
-const CORE_ASSETS = ['./', './index.html', './style.css', './app.js', './data.js', './manifest.json'];
+const CACHE_NAME = 'cronoapp-v2';
+const CORE_ASSETS = [
+  './', './index.html', './style.css', './app.js', './main.js', './cronogramas.js',
+  './data.js', './data-sf2-electrico.js', './data-sf2-instrumentacion.js', './manifest.json'
+];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(

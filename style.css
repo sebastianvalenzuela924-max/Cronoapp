@@ -577,3 +577,47 @@ body{
 @media (prefers-reduced-motion: reduce){
   *{ animation-duration:.001ms !important; transition-duration:.001ms !important; }
 }
+
+/* ===== MENU: selección de cronograma ===== */
+#appShell[hidden], #menuScreen[hidden]{ display:none !important; }
+.menu-screen{
+  min-height:100dvh;
+  display:flex; flex-direction:column; align-items:center;
+  padding: 56px 20px 40px;
+  background: var(--bg-soft);
+}
+.menu-hero{ text-align:center; max-width:420px; margin-bottom:30px; }
+.menu-mark{
+  width:56px; height:56px; border-radius:16px; margin:0 auto 14px;
+  display:flex; align-items:center; justify-content:center; font-size:26px;
+  background: var(--brand-soft);
+}
+.menu-hero h1{ margin:0 0 6px; font-size:24px; font-weight:900; letter-spacing:-.3px; color:var(--text); }
+.menu-hero p{ margin:0; font-size:14px; color:var(--text-faint); font-weight:600; }
+
+.menu-cards{ width:100%; max-width:520px; display:flex; flex-direction:column; gap:14px; }
+.menu-card{
+  display:flex; align-items:center; gap:14px;
+  background: var(--bg); border-radius: var(--radius); padding:16px;
+  box-shadow: var(--shadow); text-decoration:none; color:inherit;
+  border:1.5px solid var(--border); border-left: 4px solid var(--accent, var(--brand));
+  transition: transform .15s ease, box-shadow .15s ease;
+}
+.menu-card:active{ transform: scale(.98); box-shadow: var(--shadow-lg); }
+.menu-card-icon{
+  width:46px; height:46px; border-radius:13px; flex:none;
+  display:flex; align-items:center; justify-content:center; font-size:22px;
+  background: var(--brand-soft);
+}
+.menu-card-body{ flex:1; min-width:0; }
+.menu-card-title{ font-size:15.5px; font-weight:800; color:var(--text); }
+.menu-card-subtitle{ font-size:12.5px; color:var(--text-dim); font-weight:600; margin-top:2px; }
+.menu-card-stats{ font-size:11.5px; color:var(--text-faint); font-weight:700; margin-top:6px; }
+.menu-card-chev{ flex:none; color:var(--text-faint); }
+
+.hdr-back-btn{
+  width:32px; height:32px; border-radius:50%; flex:none;
+  border:1.5px solid var(--border); background: var(--bg-soft); color: var(--text-dim);
+  display:flex; align-items:center; justify-content:center; cursor:pointer; padding:0;
+}
+.hdr-back-btn:active{ background: var(--brand-soft); color: var(--brand); border-color: var(--brand); }
