@@ -563,6 +563,8 @@ window.initCronoApp = function(DATA){
   const overviewPanel = $('overviewPanel');
   const overviewClose = $('overviewClose');
   const overviewRows = $('overviewRows');
+  const overviewKpiStrip = $('overviewKpiStrip');
+  const ovKpiActive = $('ovKpiActive'), ovKpiNext = $('ovKpiNext'), ovKpiDone = $('ovKpiDone'), ovKpiTotal = $('ovKpiTotal');
   let overviewOpen = false;
 
   const overviewOpenCats = new Set();
@@ -572,7 +574,9 @@ window.initCronoApp = function(DATA){
     DATA.categories.forEach((cat, idx) => {
       const all = tasksByCat[cat.id] || [];
       if (!all.length) return;
-      const isOpen = overviewOpenCats.has(cat.id);
+      const visible = all.filter(t => matchesFilter(t, now));
+      if (!visible.length) return;
+      const isOpen = overviewOpenCats.has(cat.id) || activeFilter !== 'all';
       const activeCount = all.filter(t => stateOf(t, now) === 'active').length;
       const doneCount = all.filter(t => stateOf(t, now) === 'done').length;
       const upcomingCount = all.length - activeCount - doneCount;
@@ -601,6 +605,7 @@ window.initCronoApp = function(DATA){
         barEl.appendChild(div);
       });
       all.forEach((t, tIdx) => {
+        if (!matchesFilter(t, now)) return;
         const s = stateOf(t, now);
         const tColor = getTaskColor(t, tIdx, idx);
         const left = pct(t._start);
@@ -622,6 +627,7 @@ window.initCronoApp = function(DATA){
       if (isOpen){
         const listEl = row.querySelector('.overview-tasklist');
         all.slice().sort((a, b) => a._start - b._start).forEach((t, tIdx) => {
+          if (!matchesFilter(t, now)) return;
           const s = stateOf(t, now);
           const tColor = getTaskColor(t, tIdx, idx);
           const tagText = s === 'active' ? 'En curso' : s === 'upcoming' ? 'Próximo' : '✓ Listo';
@@ -645,6 +651,13 @@ window.initCronoApp = function(DATA){
       });
       overviewRows.appendChild(row);
     });
+    if (!overviewRows.children.length){
+      const empty = document.createElement('div');
+      empty.className = 'overview-empty';
+      empty.textContent = 'Sin actividades para este filtro.';
+      overviewRows.appendChild(empty);
+    }
+    [...overviewKpiStrip.children].forEach(c => c.classList.toggle('selected', c.dataset.kpi === activeFilter));
   }
 
   function openOverview(){
@@ -780,6 +793,8 @@ window.initCronoApp = function(DATA){
     });
     kpiActive.textContent = active; kpiNext.textContent = upcoming2h;
     kpiDone.textContent = done; kpiTotal.textContent = DATA.tasks.length;
+    ovKpiActive.textContent = active; ovKpiNext.textContent = upcoming2h;
+    ovKpiDone.textContent = done; ovKpiTotal.textContent = DATA.tasks.length;
 
     let phase, hdrClass, label;
     if (now < WINDOW_START){
@@ -975,26 +990,33 @@ window.initCronoApp = function(DATA){
 
   const kpiStrip = $('kpiStrip');
   searchInput.addEventListener('input', e => { searchQuery = e.target.value.trim(); renderActiveView(scrubTime); });
-  filterChips.addEventListener('click', e => {
-    const btn = e.target.closest('.chip'); if (!btn) return;
-    [...filterChips.children].forEach(c => c.classList.remove('active'));
-    btn.classList.add('active'); activeFilter = btn.dataset.filter;
-    [...kpiStrip.children].forEach(c => c.classList.toggle('selected', c.dataset.kpi === activeFilter));
-    renderActiveView(scrubTime);
-  });
 
   function syncFilterChipsUI(){
     [...filterChips.children].forEach(c => c.classList.toggle('active', c.dataset.filter === activeFilter));
   }
+  function applyFilter(filter){
+    activeFilter = filter;
+    syncFilterChipsUI();
+    [...kpiStrip.children].forEach(c => c.classList.toggle('selected', c.dataset.kpi === activeFilter));
+    renderActiveView(scrubTime);
+    if (overviewOpen) renderOverview(scrubTime);
+  }
+  filterChips.addEventListener('click', e => {
+    const btn = e.target.closest('.chip'); if (!btn) return;
+    applyFilter(btn.dataset.filter);
+  });
+
   kpiStrip.addEventListener('click', e => {
     const btn = e.target.closest('.kpi'); if (!btn) return;
-    activeFilter = btn.dataset.kpi;
-    [...kpiStrip.children].forEach(c => c.classList.toggle('selected', c === btn));
-    syncFilterChipsUI();
-    renderActiveView(scrubTime);
+    applyFilter(btn.dataset.kpi);
     const target = viewMode === 'agenda' ? viewAgenda : viewSystems;
     const top = target.getBoundingClientRect().top + window.scrollY - 150;
     window.scrollTo({ top, behavior: 'smooth' });
+  });
+
+  overviewKpiStrip.addEventListener('click', e => {
+    const btn = e.target.closest('.kpi'); if (!btn) return;
+    applyFilter(btn.dataset.kpi);
   });
 
   setInterval(() => {

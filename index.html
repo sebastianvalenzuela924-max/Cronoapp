@@ -227,6 +227,24 @@
       <span class="overview-sub">Todos los sistemas en una sola vista</span>
       <button class="overview-close" id="overviewClose" aria-label="Cerrar">✕</button>
     </div>
+    <section class="kpis overview-kpis" id="overviewKpiStrip">
+      <button class="kpi kpi-active" data-kpi="active">
+        <span class="kpi-num" id="ovKpiActive">0</span>
+        <span class="kpi-label">En curso</span>
+      </button>
+      <button class="kpi kpi-soon" data-kpi="soon">
+        <span class="kpi-num" id="ovKpiNext">0</span>
+        <span class="kpi-label">Próx. 2 h</span>
+      </button>
+      <button class="kpi kpi-done" data-kpi="done">
+        <span class="kpi-num" id="ovKpiDone">0</span>
+        <span class="kpi-label">Listas</span>
+      </button>
+      <button class="kpi kpi-total" data-kpi="all">
+        <span class="kpi-num" id="ovKpiTotal">0</span>
+        <span class="kpi-label">Total</span>
+      </button>
+    </section>
     <div class="overview-list" id="overviewList">
       <div class="overview-rows" id="overviewRows"></div>
     </div>
