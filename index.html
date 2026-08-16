@@ -16,7 +16,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=9" />
+<link rel="stylesheet" href="style.css?v=12" />
 </head>
 <body>
 
@@ -43,7 +43,9 @@
       <button class="hdr-share-btn" id="btnShare" aria-label="Compartir">
         <svg viewBox="0 0 24 24" width="17" height="17"><circle cx="18" cy="5" r="2.6" stroke="currentColor" stroke-width="1.8" fill="none"/><circle cx="6" cy="12" r="2.6" stroke="currentColor" stroke-width="1.8" fill="none"/><circle cx="18" cy="19" r="2.6" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M8.3 10.7l7.4-4.2M8.3 13.3l7.4 4.2" stroke="currentColor" stroke-width="1.8"/></svg>
       </button>
-      <div class="hdr-clock" id="hdrClock">--:--</div>
+      <button class="hdr-share-btn" id="btnOverview" aria-label="Ver panorama general">
+        <svg viewBox="0 0 24 24" width="17" height="17"><rect x="3" y="5" width="18" height="3" rx="1.5" fill="currentColor"/><rect x="3" y="10.5" width="12" height="3" rx="1.5" fill="currentColor"/><rect x="3" y="16" width="15" height="3" rx="1.5" fill="currentColor"/></svg>
+      </button>
     </div>
     <p class="hdr-subtitle" id="hdrSubtitle">Corte de Energía · Áreas Comunes 2026</p>
     <div class="hdr-status" id="hdrLive">
@@ -194,6 +196,17 @@
     </div>
   </aside>
 
+  <!-- ===== PANORAMA GENERAL: todos los sistemas en una sola línea de tiempo ===== -->
+  <div class="overview-panel" id="overviewPanel">
+    <div class="overview-hdr">
+      <h2>Panorama general</h2>
+      <span class="overview-sub">Todos los sistemas en una sola vista</span>
+      <button class="overview-close" id="overviewClose" aria-label="Cerrar">✕</button>
+    </div>
+    <div class="overview-ruler" id="overviewRuler"></div>
+    <div class="overview-list" id="overviewList"></div>
+  </div>
+
 <!-- ===== BOTTOM TIME SCRUBBER (fixed, controls the whole app) ===== -->
 <footer class="scrubber" id="scrubber">
   <div class="scrubber-bubble" id="scrubberBubble">
@@ -218,7 +231,7 @@
 <script src="data.js"></script>
 <script src="data-sf2-electrico.js"></script>
 <script src="data-sf2-instrumentacion.js"></script>
-<script src="app.js?v=4"></script>
+<script src="app.js?v=5"></script>
 <script src="cronogramas.js"></script>
 <script src="main.js?v=2"></script>
 </body>

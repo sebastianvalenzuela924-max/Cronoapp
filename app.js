@@ -137,7 +137,7 @@ window.initCronoApp = function(DATA){
   const sysList = $('sysList');
   const boardEmpty = $('boardEmpty');
   const kpiActive = $('kpiActive'), kpiNext = $('kpiNext'), kpiDone = $('kpiDone'), kpiTotal = $('kpiTotal');
-  const hdrLive = $('hdrLive'), liveLabel = $('liveLabel'), hdrClock = $('hdrClock');
+  const hdrLive = $('hdrLive'), liveLabel = $('liveLabel');
   const summaryPhase = $('summaryPhase'), summaryPct = $('summaryPct'), summaryFill = $('summaryFill');
   const summaryFrom = $('summaryFrom'), summaryTo = $('summaryTo');
   const searchInput = $('searchInput');
@@ -538,6 +538,90 @@ window.initCronoApp = function(DATA){
   drawerClose.addEventListener('click', closeDrawer);
   drawerBackdrop.addEventListener('click', closeDrawer);
 
+  // ===== Panorama general: todos los sistemas en una sola línea de tiempo =====
+  const btnOverview = $('btnOverview');
+  const overviewPanel = $('overviewPanel');
+  const overviewClose = $('overviewClose');
+  const overviewRuler = $('overviewRuler');
+  const overviewList = $('overviewList');
+  let overviewOpen = false;
+
+  function renderOverviewRuler(){
+    overviewRuler.innerHTML = '';
+    DAY_SEGMENTS.forEach(seg => {
+      const left = pct(seg.start);
+      const width = pct(seg.end) - left;
+      if (width < 6) return;
+      const el = document.createElement('div');
+      el.className = 'overview-ruler-day';
+      el.style.left = left + '%';
+      el.textContent = seg.label + ' ' + String(seg.date).padStart(2, '0');
+      overviewRuler.appendChild(el);
+    });
+  }
+
+  function renderOverview(now){
+    overviewList.innerHTML = '';
+    DATA.categories.forEach((cat, idx) => {
+      const all = tasksByCat[cat.id] || [];
+      if (!all.length) return;
+
+      const row = document.createElement('div');
+      row.className = 'overview-row';
+      row.innerHTML = `
+        <div class="overview-row-label">
+          <span class="icon">${cat.icon}</span>
+          <span class="name">${cat.label}</span>
+        </div>
+        <div class="overview-bar-wrap"></div>
+      `;
+      const barEl = row.querySelector('.overview-bar-wrap');
+      DAY_SEGMENTS.slice(1).forEach(seg => {
+        const div = document.createElement('div');
+        div.className = 'overview-daydiv';
+        div.style.left = pct(seg.start) + '%';
+        barEl.appendChild(div);
+      });
+      all.forEach((t, tIdx) => {
+        const s = stateOf(t, now);
+        const tColor = getTaskColor(t, tIdx, idx);
+        const left = pct(t._start);
+        const width = Math.max(1, pct(t._end) - left);
+        const seg = document.createElement('div');
+        seg.className = 'overview-seg state-' + s;
+        seg.style.left = left + '%';
+        seg.style.width = width + '%';
+        seg.style.background = tColor;
+        seg.title = t.name;
+        seg.addEventListener('click', (e) => { e.stopPropagation(); openDrawer(t, scrubTime); });
+        barEl.appendChild(seg);
+      });
+      const nowLine = document.createElement('div');
+      nowLine.className = 'overview-now-line';
+      nowLine.style.left = pct(now) + '%';
+      barEl.appendChild(nowLine);
+
+      row.addEventListener('click', () => {
+        closeOverview();
+        goToSystem(cat.id);
+      });
+      overviewList.appendChild(row);
+    });
+  }
+
+  function openOverview(){
+    overviewOpen = true;
+    renderOverviewRuler();
+    renderOverview(scrubTime);
+    overviewPanel.classList.add('show');
+  }
+  function closeOverview(){
+    overviewOpen = false;
+    overviewPanel.classList.remove('show');
+  }
+  btnOverview.addEventListener('click', openOverview);
+  overviewClose.addEventListener('click', closeOverview);
+
   const btnShare = $('btnShare');
   const shareDrawer = $('shareDrawer');
   const shareClose = $('shareClose');
@@ -633,7 +717,6 @@ window.initCronoApp = function(DATA){
   });
 
   function updateChrome(now){
-    hdrClock.textContent = fmtTime(new Date());
     const in2h = new Date(now.getTime() + 2*3600000);
     let active=0, upcoming2h=0, done=0;
     DATA.tasks.forEach(t=>{
@@ -679,6 +762,7 @@ window.initCronoApp = function(DATA){
     updateScrubberBubble();
     updateChrome(scrubTime);
     renderActiveView(scrubTime);
+    if (overviewOpen) renderOverview(scrubTime);
   }
 
   // ===== Rueda horizontal infinita de tiempo (estilo Zoom Earth) =====
