@@ -543,11 +543,14 @@ window.initCronoApp = function(DATA){
   const overviewPanel = $('overviewPanel');
   const overviewClose = $('overviewClose');
   const overviewRuler = $('overviewRuler');
-  const overviewList = $('overviewList');
+  const overviewRows = $('overviewRows');
   let overviewOpen = false;
 
+  const overviewOpenCats = new Set();
+
   function renderOverviewRuler(){
-    overviewRuler.innerHTML = '';
+    const track = overviewRuler.querySelector('.overview-ruler-track');
+    track.innerHTML = '';
     DAY_SEGMENTS.forEach(seg => {
       const left = pct(seg.start);
       const width = pct(seg.end) - left;
@@ -556,24 +559,29 @@ window.initCronoApp = function(DATA){
       el.className = 'overview-ruler-day';
       el.style.left = left + '%';
       el.textContent = seg.label + ' ' + String(seg.date).padStart(2, '0');
-      overviewRuler.appendChild(el);
+      track.appendChild(el);
     });
   }
 
   function renderOverview(now){
-    overviewList.innerHTML = '';
+    overviewRows.innerHTML = '';
     DATA.categories.forEach((cat, idx) => {
       const all = tasksByCat[cat.id] || [];
       if (!all.length) return;
+      const isOpen = overviewOpenCats.has(cat.id);
 
       const row = document.createElement('div');
-      row.className = 'overview-row';
+      row.className = 'overview-row' + (isOpen ? ' open' : '');
       row.innerHTML = `
-        <div class="overview-row-label">
-          <span class="icon">${cat.icon}</span>
-          <span class="name">${cat.label}</span>
+        <div class="overview-row-head">
+          <div class="overview-row-label">
+            <span class="icon">${cat.icon}</span>
+            <span class="name">${cat.label}</span>
+          </div>
+          <div class="overview-bar-wrap"></div>
+          <svg class="overview-chev" viewBox="0 0 24 24" width="14" height="14"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </div>
-        <div class="overview-bar-wrap"></div>
+        <div class="overview-tasklist"></div>
       `;
       const barEl = row.querySelector('.overview-bar-wrap');
       DAY_SEGMENTS.slice(1).forEach(seg => {
@@ -601,11 +609,30 @@ window.initCronoApp = function(DATA){
       nowLine.style.left = pct(now) + '%';
       barEl.appendChild(nowLine);
 
-      row.addEventListener('click', () => {
-        closeOverview();
-        goToSystem(cat.id);
+      if (isOpen){
+        const listEl = row.querySelector('.overview-tasklist');
+        all.slice().sort((a, b) => a._start - b._start).forEach((t, tIdx) => {
+          const s = stateOf(t, now);
+          const tColor = getTaskColor(t, tIdx, idx);
+          const tagText = s === 'active' ? 'En curso' : s === 'upcoming' ? 'Próximo' : '✓ Listo';
+          const taskRow = document.createElement('div');
+          taskRow.className = 'overview-task state-' + s;
+          taskRow.innerHTML = `
+            <span class="dot" style="background:${tColor}"></span>
+            <span class="name">${t.name}</span>
+            <span class="meta">${fmtTime(t._start)}${t.isMilestone ? '' : '–' + fmtTime(t._end)}</span>
+            <span class="chip ${s}">${tagText}</span>
+          `;
+          taskRow.addEventListener('click', (e) => { e.stopPropagation(); openDrawer(t, scrubTime); });
+          listEl.appendChild(taskRow);
+        });
+      }
+
+      row.querySelector('.overview-row-head').addEventListener('click', () => {
+        if (overviewOpenCats.has(cat.id)) overviewOpenCats.delete(cat.id); else overviewOpenCats.add(cat.id);
+        renderOverview(scrubTime);
       });
-      overviewList.appendChild(row);
+      overviewRows.appendChild(row);
     });
   }
 

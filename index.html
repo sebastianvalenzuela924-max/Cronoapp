@@ -16,7 +16,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=12" />
+<link rel="stylesheet" href="style.css?v=15" />
 </head>
 <body>
 
@@ -203,8 +203,14 @@
       <span class="overview-sub">Todos los sistemas en una sola vista</span>
       <button class="overview-close" id="overviewClose" aria-label="Cerrar">✕</button>
     </div>
-    <div class="overview-ruler" id="overviewRuler"></div>
-    <div class="overview-list" id="overviewList"></div>
+    <div class="overview-list" id="overviewList">
+      <div class="overview-ruler" id="overviewRuler">
+        <div class="overview-ruler-spacer"></div>
+        <div class="overview-ruler-track"></div>
+        <div class="overview-ruler-chev-spacer"></div>
+      </div>
+      <div class="overview-rows" id="overviewRows"></div>
+    </div>
   </div>
 
 <!-- ===== BOTTOM TIME SCRUBBER (fixed, controls the whole app) ===== -->
@@ -231,7 +237,7 @@
 <script src="data.js"></script>
 <script src="data-sf2-electrico.js"></script>
 <script src="data-sf2-instrumentacion.js"></script>
-<script src="app.js?v=5"></script>
+<script src="app.js?v=7"></script>
 <script src="cronogramas.js"></script>
 <script src="main.js?v=2"></script>
 </body>
