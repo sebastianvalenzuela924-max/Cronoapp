@@ -83,7 +83,6 @@ body{
   display:flex; align-items:center; justify-content:center; cursor:pointer; padding:0;
 }
 .hdr-share-btn:active{ background: var(--brand-soft); color: var(--brand); border-color: var(--brand); }
-.hdr-order-btn.is-dynamic{ background: var(--brand-soft); color: var(--brand); border-color: var(--brand); }
 .hdr-clock{
   flex:none; font-size:12.5px; font-weight:800; color: var(--text-dim);
   font-variant-numeric: tabular-nums; min-width:38px; text-align:right;

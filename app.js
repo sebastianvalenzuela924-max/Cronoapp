@@ -64,9 +64,7 @@ window.initCronoApp = function(DATA){
   }
   // Estado global de un sistema: activo si tiene alguna tarea en curso,
   // completado si todas ya terminaron, próximo en el resto de los casos.
-  // Se usa para ordenar las tarjetas (activo arriba, próximo al medio,
-  // completado al final) y para pintar el fondo de la tarjeta.
-  const STATE_PRIORITY = { active: 0, upcoming: 1, done: 2 };
+  // Se usa para el color de fondo de cada tarjeta en Sistemas.
   function categoryState(all, now){
     const activeCount = all.filter(t => stateOf(t, now) === 'active').length;
     const doneCount = all.filter(t => stateOf(t, now) === 'done').length;
@@ -133,7 +131,6 @@ window.initCronoApp = function(DATA){
   let agendaCategoryFilter = 'all';
   const openCats = new Set();
   let viewMode = 'systems';
-  let sysOrderMode = 'dynamic'; // 'dynamic' (en curso arriba, se reordena solo) | 'static' (orden fijo original)
 
   const $ = id => document.getElementById(id);
   const sysRuler = $('sysRuler');
@@ -261,13 +258,6 @@ window.initCronoApp = function(DATA){
     const orderedCats = DATA.categories
       .map((cat, idx) => ({ cat, idx }))
       .filter(({ cat }) => (tasksByCat[cat.id] || []).length);
-    if (sysOrderMode === 'dynamic'){
-      orderedCats.sort((a, b) => {
-        const sa = categoryState(tasksByCat[a.cat.id] || [], now).state;
-        const sb = categoryState(tasksByCat[b.cat.id] || [], now).state;
-        return STATE_PRIORITY[sa] - STATE_PRIORITY[sb];
-      });
-    }
 
     orderedCats.forEach(({ cat, idx }) => {
       const all = tasksByCat[cat.id] || [];
@@ -551,28 +541,6 @@ window.initCronoApp = function(DATA){
   drawerClose.addEventListener('click', closeDrawer);
   drawerBackdrop.addEventListener('click', closeDrawer);
 
-  // Botón de orden de Sistemas: dinámico (se reordena solo, en curso arriba)
-  // vs fijo (orden original, no se mueve al abrir una tarjeta y esperar).
-  const btnSysOrder = $('btnSysOrder');
-  const sysOrderIcon = $('sysOrderIcon');
-  const ICON_DYNAMIC = '<path d="M8 4L4 8m0 0l4 4M4 8h12M16 20l4-4m0 0l-4-4m4 4H8" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>';
-  const ICON_STATIC = '<path d="M12 21s7-7.2 7-12a7 7 0 10-14 0c0 4.8 7 12 7 12z" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linejoin="round"/><circle cx="12" cy="9" r="2.3" stroke="currentColor" stroke-width="1.8" fill="none"/>';
-  function updateSysOrderBtn(){
-    const isDynamic = sysOrderMode === 'dynamic';
-    sysOrderIcon.innerHTML = isDynamic ? ICON_DYNAMIC : ICON_STATIC;
-    btnSysOrder.classList.toggle('is-dynamic', isDynamic);
-    btnSysOrder.setAttribute('aria-label', isDynamic
-      ? 'Orden dinámico activo (en curso arriba) · tocar para fijar orden'
-      : 'Orden fijo activo · tocar para ordenar dinámicamente');
-    btnSysOrder.title = isDynamic ? 'Orden dinámico' : 'Orden fijo';
-  }
-  btnSysOrder.addEventListener('click', () => {
-    sysOrderMode = sysOrderMode === 'dynamic' ? 'static' : 'dynamic';
-    updateSysOrderBtn();
-    renderActiveView(scrubTime);
-  });
-  updateSysOrderBtn();
-
   const btnShare = $('btnShare');
   const shareDrawer = $('shareDrawer');
   const shareClose = $('shareClose');
@@ -582,7 +550,7 @@ window.initCronoApp = function(DATA){
   const shareQr = $('shareQr');
 
   function currentShareUrl(){
-    return window.location.origin + window.location.pathname + window.location.search;
+    return 'https://cronoapp-red.vercel.app/';
   }
 
   function openShare(){
