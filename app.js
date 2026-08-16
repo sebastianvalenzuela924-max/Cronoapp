@@ -17,14 +17,24 @@
   const colorFor = (idx) => PALETTE[idx % PALETTE.length];
 
   const TASK_PALETTE = [
-    '#2563EB', '#059669', '#D97706', '#7C3AED', '#DB2777', 
-    '#0891B2', '#EA580C', '#0D9488', '#4F46E5', '#65A30D', 
-    '#E11D48', '#0284C7', '#9333EA', '#16A34A', '#CA8A04', 
-    '#C026D3', '#06B6D4', '#F43F5E'
+    '#3B82F6', // Blue
+    '#10B981', // Emerald
+    '#F59E0B', // Amber
+    '#8B5CF6', // Purple
+    '#EC4899', // Pink
+    '#06B6D4', // Cyan
+    '#F97316', // Orange
+    '#14B8A6', // Teal
+    '#6366F1', // Indigo
+    '#84CC16', // Lime
+    '#D946EF', // Fuchsia
+    '#0284C7', // Sky Blue
+    '#E11D48', // Crimson Rose
+    '#059669'  // Deep Mint
   ];
 
   function getTaskColor(t, taskIdx, catIdx) {
-    const idx = ((t.id * 3) + (taskIdx !== undefined ? taskIdx : 0) + ((catIdx || 0) * 5)) % TASK_PALETTE.length;
+    const idx = ((taskIdx !== undefined ? taskIdx : 0) * 3 + ((catIdx || 0) * 5) + (t.id % 7)) % TASK_PALETTE.length;
     return TASK_PALETTE[idx];
   }
 
