@@ -435,7 +435,7 @@ body{
 .scrubber-days span.align-center{ transform: translateX(-50%); }
 
 .scrubber-track{
-  position:relative; height:38px; border-radius:12px;
+  position:relative; height:48px; border-radius:14px;
   background: rgba(255,255,255,.06); touch-action:none; cursor:grab;
   overflow:hidden;
 }

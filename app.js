@@ -641,19 +641,35 @@
     return new Date(WINDOW_START.getTime() + f * WINDOW_MS);
   }
 
+  function snapTime(d){
+    const STEP_MS = 5 * 60000;
+    return new Date(Math.round(d.getTime() / STEP_MS) * STEP_MS);
+  }
+
+  // El deslizamiento es relativo (no salta al punto exacto del dedo) y se
+  // atenúa con DRAG_SENSITIVITY para que mover el dedo requiera más recorrido
+  // por cada minuto avanzado, dando control fino sobre una ventana de varios días.
+  const DRAG_SENSITIVITY = 0.35;
   const scrubberEl = $('scrubber');
   let dragging = false;
+  let dragStartX = 0;
+  let dragStartTime = null;
   function onPointerDown(e){
     dragging = true; autoFollow = false; stopPlaying();
     scrubberEl.classList.add('is-dragging');
     const x = e.touches ? e.touches[0].clientX : e.clientX;
-    setScrubTime(trackToTime(x));
+    dragStartX = x;
+    dragStartTime = trackToTime(x);
+    setScrubTime(dragStartTime);
     e.preventDefault();
   }
   function onPointerMove(e){
     if (!dragging) return;
     const x = e.touches ? e.touches[0].clientX : e.clientX;
-    setScrubTime(trackToTime(x));
+    const rect = scrubberTrack.getBoundingClientRect();
+    const deltaPx = (x - dragStartX) * DRAG_SENSITIVITY;
+    const deltaMs = (deltaPx / rect.width) * WINDOW_MS;
+    setScrubTime(snapTime(new Date(dragStartTime.getTime() + deltaMs)));
   }
   function onPointerUp(){ dragging = false; scrubberEl.classList.remove('is-dragging'); }
   scrubberTrack.addEventListener('mousedown', onPointerDown);
