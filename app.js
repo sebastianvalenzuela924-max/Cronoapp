@@ -62,6 +62,17 @@ window.initCronoApp = function(DATA){
     if (t._start <= now) return 'active';
     return 'upcoming';
   }
+  // Estado global de un sistema: activo si tiene alguna tarea en curso,
+  // completado si todas ya terminaron, próximo en el resto de los casos.
+  // Se usa para ordenar las tarjetas (activo arriba, próximo al medio,
+  // completado al final) y para pintar el fondo de la tarjeta.
+  const STATE_PRIORITY = { active: 0, upcoming: 1, done: 2 };
+  function categoryState(all, now){
+    const activeCount = all.filter(t => stateOf(t, now) === 'active').length;
+    const doneCount = all.filter(t => stateOf(t, now) === 'done').length;
+    const state = activeCount > 0 ? 'active' : (doneCount === all.length ? 'done' : 'upcoming');
+    return { state, activeCount, doneCount };
+  }
   function fmtDayTime(d){
     const days = ['DOM','LUN','MAR','MIÉ','JUE','VIE','SÁB'];
     const dd = String(d.getDate()).padStart(2,'0');
@@ -119,6 +130,7 @@ window.initCronoApp = function(DATA){
   let playTimer = null;
   let activeFilter = 'all';
   let searchQuery = '';
+  let agendaCategoryFilter = 'all';
   const openCats = new Set();
   let viewMode = 'systems';
 
@@ -137,6 +149,19 @@ window.initCronoApp = function(DATA){
   const viewSystems = $('viewSystems');
   const viewAgenda = $('viewAgenda');
   const agendaEl = $('agenda');
+  const agendaSystemFilter = $('agendaSystemFilter');
+  DATA.categories.forEach(cat => {
+    const all = tasksByCat[cat.id] || [];
+    if (!all.length) return;
+    const opt = document.createElement('option');
+    opt.value = cat.id;
+    opt.textContent = cat.icon + ' ' + cat.label;
+    agendaSystemFilter.appendChild(opt);
+  });
+  agendaSystemFilter.addEventListener('change', () => {
+    agendaCategoryFilter = agendaSystemFilter.value;
+    renderActiveView(scrubTime);
+  });
 
   const scrubberBubbleDay = $('scrubberBubbleDay'), scrubberBubbleTime = $('scrubberBubbleTime');
   const scrubberDaysEl = $('scrubberDays');
@@ -232,25 +257,32 @@ window.initCronoApp = function(DATA){
     sysList.innerHTML = '';
     let anyVisible = false;
 
-    DATA.categories.forEach((cat, idx) => {
+    const orderedCats = DATA.categories
+      .map((cat, idx) => ({ cat, idx }))
+      .filter(({ cat }) => (tasksByCat[cat.id] || []).length)
+      .sort((a, b) => {
+        const sa = categoryState(tasksByCat[a.cat.id] || [], now).state;
+        const sb = categoryState(tasksByCat[b.cat.id] || [], now).state;
+        return STATE_PRIORITY[sa] - STATE_PRIORITY[sb];
+      });
+
+    orderedCats.forEach(({ cat, idx }) => {
       const all = tasksByCat[cat.id] || [];
-      if (!all.length) return;
       const visible = all.filter(t => matchesSearch(t, cat) && matchesFilter(t, now));
       if (!visible.length) return;
       anyVisible = true;
 
       const color = colorFor(idx);
       const isOpen = openCats.has(cat.id) || !!searchQuery || activeFilter !== 'all';
-      const activeCount = all.filter(t => stateOf(t, now) === 'active').length;
-      const doneCount = all.filter(t => stateOf(t, now) === 'done').length;
+      const { state: cardState, activeCount, doneCount } = categoryState(all, now);
 
       let badgeText, badgeClass;
-      if (activeCount > 0){ badgeText = activeCount + ' en curso'; badgeClass = 'active'; }
-      else if (doneCount === all.length){ badgeText = 'completado'; badgeClass = 'done'; }
+      if (cardState === 'active'){ badgeText = activeCount + ' en curso'; badgeClass = 'active'; }
+      else if (cardState === 'done'){ badgeText = 'completado'; badgeClass = 'done'; }
       else { badgeText = all.length + ' pendientes'; badgeClass = 'upcoming'; }
 
       const card = document.createElement('div');
-      card.className = 'sys-card' + (isOpen ? ' open' : '') + (activeCount > 0 ? ' has-active' : '');
+      card.className = 'sys-card card-' + cardState + (isOpen ? ' open' : '');
       card.dataset.cat = cat.id;
       card.innerHTML = `
         <div class="sys-card-head">
@@ -335,6 +367,7 @@ window.initCronoApp = function(DATA){
 
     let items = [];
     DATA.categories.forEach((cat, idx) => {
+      if (agendaCategoryFilter !== 'all' && cat.id !== agendaCategoryFilter) return;
       const all = tasksByCat[cat.id] || [];
       all.forEach((t, tIdx) => {
         if (!matchesSearch(t, cat) || !matchesFilter(t, now)) return;

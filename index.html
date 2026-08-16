@@ -16,7 +16,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=3" />
+<link rel="stylesheet" href="style.css?v=4" />
 </head>
 <body>
 
@@ -122,6 +122,12 @@
 
   <!-- ===== VISTA 2: AGENDA (lista vertical cronológica, grande y clara) ===== -->
   <div class="view-panel" id="viewAgenda" hidden>
+    <div class="agenda-system-filter-wrap">
+      <svg viewBox="0 0 24 24" width="16" height="16"><path d="M4 6h16M7 12h10M10 18h4" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+      <select id="agendaSystemFilter" class="agenda-system-filter" aria-label="Filtrar agenda por sistema">
+        <option value="all">Todos los sistemas</option>
+      </select>
+    </div>
     <div class="agenda" id="agenda"></div>
   </div>
 

@@ -200,8 +200,11 @@ body{
 .sys-card{
   border:1.5px solid var(--border); border-radius: 16px; overflow:hidden;
   background: var(--bg);
+  transition: background .25s ease, border-color .25s ease;
 }
-.sys-card.has-active{ border-color: var(--live); box-shadow: 0 0 0 1px rgba(239,68,68,.08); }
+.sys-card.card-active{ background:#FDECC8; border-color:rgba(245,158,11,.5); }
+.sys-card.card-upcoming{ background:#DBEAFE; border-color:rgba(37,99,235,.35); }
+.sys-card.card-done{ background:#D7F5E3; border-color:rgba(22,163,74,.35); }
 .sys-card.flash{ animation: flashCard 1.4s ease; }
 @keyframes flashCard{
   0%{ box-shadow: 0 0 0 3px rgba(79,70,229,.5); }
@@ -218,9 +221,9 @@ body{
 .sys-badge{
   font-size:11px; font-weight:800; padding:4px 10px; border-radius:999px; white-space:nowrap; flex:none;
 }
-.sys-badge.active{ background: var(--live-soft); color: var(--live); }
-.sys-badge.upcoming{ background: var(--warning-soft); color: var(--warning); }
-.sys-badge.done{ background: var(--muted-soft); color: var(--muted); }
+.sys-badge.active{ background: var(--warning-soft); color: var(--warning); }
+.sys-badge.upcoming{ background: var(--upcoming-soft); color: var(--upcoming); }
+.sys-badge.done{ background: var(--success-soft); color: var(--success); }
 .sys-chev{ color: var(--text-faint); transition: transform .2s ease; flex:none; }
 .sys-card.open .sys-chev{ transform: rotate(180deg); }
 
@@ -302,6 +305,18 @@ body{
 .sys-task-chip.active{ background: #FEF3C7; color: #B45309; }
 .sys-task-chip.upcoming{ background: var(--upcoming-soft); color: var(--upcoming); }
 .sys-task-chip.done{ background: var(--success-soft); color: var(--success); }
+
+.agenda-system-filter-wrap{
+  display:flex; align-items:center; gap:8px;
+  margin: 0 18px 10px; padding: 10px 14px;
+  border:1.5px solid var(--border); border-radius: 12px;
+  background: var(--bg-soft); color: var(--text-faint);
+}
+.agenda-system-filter{
+  flex:1; border:none; outline:none; background:transparent; color:var(--text);
+  font-family: var(--font); font-size:13.5px; font-weight:700;
+  appearance:none; -webkit-appearance:none;
+}
 
 .agenda{ padding: 4px 18px 100px; }
 
