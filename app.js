@@ -162,9 +162,7 @@ window.initCronoApp = function(DATA){
   });
 
   const scrubberBubbleDay = $('scrubberBubbleDay'), scrubberBubbleTime = $('scrubberBubbleTime');
-  const scrubberDaysEl = $('scrubberDays');
-  const scrubberTrack = $('scrubberTrack'), scrubberSegments = $('scrubberSegments');
-  const scrubberTicks = $('scrubberTicks'), scrubberHandle = $('scrubberHandle');
+  const wheelViewport = $('wheelViewport'), wheelTrack = $('wheelTrack');
   const btnPlay = $('btnPlay'), playIcon = $('playIcon'), btnLive = $('btnLive');
 
   const MIN_LABEL_PCT = 9;
@@ -193,48 +191,6 @@ window.initCronoApp = function(DATA){
     sysRuler.appendChild(track);
   }
   buildSysRuler();
-
-  function buildScrubberChrome(){
-    scrubberDaysEl.innerHTML = '';
-    scrubberSegments.innerHTML = '';
-    scrubberTicks.innerHTML = '';
-
-    DAY_SEGMENTS.forEach((seg, i) => {
-      const left = pct(seg.start);
-      const width = pct(seg.end) - left;
-      const center = left + width / 2;
-
-      const segEl = document.createElement('div');
-      segEl.className = 'scrubber-seg';
-      segEl.style.left = left + '%';
-      segEl.style.width = width + '%';
-      scrubberSegments.appendChild(segEl);
-
-      if (width < MIN_LABEL_PCT) return;
-
-      const label = document.createElement('span');
-      label.textContent = seg.label + ' ' + String(seg.date).padStart(2,'0');
-      label.dataset.segIndex = i;
-      const isFirst = i === 0;
-      const isLast = i === DAY_SEGMENTS.length - 1;
-      if (isFirst){ label.classList.add('align-start'); label.style.left = left + '%'; }
-      else if (isLast){ label.classList.add('align-end'); label.style.left = (left + width) + '%'; }
-      else { label.classList.add('align-center'); label.style.left = center + '%'; }
-      scrubberDaysEl.appendChild(label);
-    });
-
-    let h = new Date(WINDOW_START); h.setMinutes(0,0,0);
-    while (h < WINDOW_END){
-      if (h.getHours() % 3 === 0){
-        const tick = document.createElement('div');
-        tick.className = 'scrubber-tick' + (h.getHours() % 12 === 0 ? ' major' : '');
-        tick.style.left = pct(h) + '%';
-        scrubberTicks.appendChild(tick);
-      }
-      h = new Date(h.getTime() + 3600000);
-    }
-  }
-  buildScrubberChrome();
 
   function matchesSearch(t, cat){
     if (!searchQuery) return true;
@@ -672,84 +628,145 @@ window.initCronoApp = function(DATA){
     summaryTo.textContent = fmtDayTime(MASTER._end);
   }
 
-  function updateScrubberUI(){
-    const p = pct(scrubTime);
-    scrubberHandle.style.left = p + '%';
+  function updateScrubberBubble(){
     scrubberBubbleDay.textContent = DAY_NAMES[scrubTime.getDay()] + ' ' + String(scrubTime.getDate()).padStart(2,'0');
     scrubberBubbleTime.textContent = fmtTime(scrubTime);
-    [...scrubberDaysEl.children].forEach(el => {
-      const seg = DAY_SEGMENTS[+el.dataset.segIndex];
-      el.classList.toggle('today', scrubTime >= seg.start && scrubTime < seg.end);
-    });
   }
 
   function setScrubTime(t){
     scrubTime = clampToWindow(t);
-    updateScrubberUI();
+    updateScrubberBubble();
     updateChrome(scrubTime);
     renderActiveView(scrubTime);
   }
 
-  function trackToTime(clientX){
-    const rect = scrubberTrack.getBoundingClientRect();
-    let f = (clientX - rect.left) / rect.width;
-    f = Math.min(1, Math.max(0, f));
-    return new Date(WINDOW_START.getTime() + f * WINDOW_MS);
+  // ===== Rueda horizontal infinita de tiempo (estilo Zoom Earth) =====
+  // Cada día es un bloque de ancho fijo (PX_PER_MIN px por minuto) que se
+  // desliza bajo una línea central fija (el "playhead"). El contenedor usa
+  // scroll nativo horizontal (drag/touch suave gratis) y solo se montan en
+  // el DOM los bloques de día cercanos al área visible: al hacer scroll se
+  // agregan los días que entran y se quitan los que quedan lejos.
+  const PX_PER_MIN = 1; // 60px = 1 hora, 1440px = 1 día
+  function offsetPx(d){ return (d - WINDOW_START) / 60000 * PX_PER_MIN; }
+  function timeAtPx(px){ return new Date(WINDOW_START.getTime() + (px / PX_PER_MIN) * 60000); }
+  const TRACK_WIDTH = WINDOW_MS / 60000 * PX_PER_MIN;
+
+  let sidePad = 0;
+  const mountedDays = new Set();
+  const dayElId = i => 'wheelDay' + i;
+
+  function buildDayEl(i){
+    const seg = DAY_SEGMENTS[i];
+    const left = sidePad + offsetPx(seg.start);
+    const width = offsetPx(seg.end) - offsetPx(seg.start);
+    const el = document.createElement('div');
+    el.className = 'wheel-day';
+    el.id = dayElId(i);
+    el.style.left = left + 'px';
+    el.style.width = width + 'px';
+
+    const label = document.createElement('div');
+    label.className = 'wheel-day-label';
+    label.textContent = seg.label + ' ' + String(seg.date).padStart(2, '0');
+    el.appendChild(label);
+
+    let h = new Date(seg.start); h.setMinutes(0, 0, 0);
+    if (h < seg.start) h = new Date(h.getTime() + 3600000);
+    while (h < seg.end){
+      const tickLeft = offsetPx(h) - offsetPx(seg.start);
+      const isMajor = h.getHours() % 6 === 0;
+      const tick = document.createElement('div');
+      tick.className = 'wheel-tick' + (isMajor ? ' major' : '');
+      tick.style.left = tickLeft + 'px';
+      el.appendChild(tick);
+      if (isMajor){
+        const tl = document.createElement('div');
+        tl.className = 'wheel-tick-label';
+        tl.style.left = tickLeft + 'px';
+        tl.textContent = String(h.getHours()).padStart(2, '0') + ':00';
+        el.appendChild(tl);
+      }
+      h = new Date(h.getTime() + 3600000);
+    }
+    return el;
   }
 
-  // Scrubber al estilo "video slow-scrub" de iOS: por defecto el cursor sigue
-  // el dedo 1:1 (cero retraso). Si el usuario desliza el dedo hacia abajo,
-  // se activa un modo de precisión por tramos que reduce la velocidad para
-  // ajustar minuto a minuto sin perder la sensación natural del arrastre.
-  const SPEED_ZONES = [
-    { dy: 0,  factor: 1,    label: '' },
-    { dy: 26, factor: 0.35, label: 'PRECISO' },
-    { dy: 68, factor: 0.08, label: 'MUY PRECISO' },
-  ];
-  function speedForDy(dy){
-    let zone = SPEED_ZONES[0];
-    for (const z of SPEED_ZONES) if (dy >= z.dy) zone = z;
-    return zone;
+  function updateMountedDays(){
+    const bufferPx = wheelViewport.clientWidth * 1.5;
+    const minPx = wheelViewport.scrollLeft - bufferPx;
+    const maxPx = wheelViewport.scrollLeft + wheelViewport.clientWidth + bufferPx;
+    const wanted = new Set();
+    DAY_SEGMENTS.forEach((seg, i) => {
+      const segLeft = sidePad + offsetPx(seg.start);
+      const segRight = sidePad + offsetPx(seg.end);
+      if (segRight >= minPx && segLeft <= maxPx) wanted.add(i);
+    });
+    mountedDays.forEach(i => {
+      if (!wanted.has(i)){
+        const el = document.getElementById(dayElId(i));
+        if (el) el.remove();
+        mountedDays.delete(i);
+      }
+    });
+    wanted.forEach(i => {
+      if (!mountedDays.has(i)){
+        wheelTrack.appendChild(buildDayEl(i));
+        mountedDays.add(i);
+      }
+    });
   }
 
+  function layoutWheel(){
+    sidePad = wheelViewport.clientWidth / 2;
+    wheelTrack.style.width = (sidePad * 2 + TRACK_WIDTH) + 'px';
+    mountedDays.forEach(i => { const el = document.getElementById(dayElId(i)); if (el) el.remove(); });
+    mountedDays.clear();
+    updateMountedDays();
+  }
+
+  function scrollToTime(t, opts){
+    const px = Math.max(0, sidePad + offsetPx(clampToWindow(t)) - wheelViewport.clientWidth / 2);
+    wheelViewport.scrollTo({ left: px, behavior: (opts && opts.smooth) ? 'smooth' : 'auto' });
+  }
+
+  function onWheelScroll(){
+    updateMountedDays();
+    const centerPx = wheelViewport.scrollLeft + wheelViewport.clientWidth / 2 - sidePad;
+    setScrubTime(timeAtPx(centerPx));
+  }
+  wheelViewport.addEventListener('scroll', onWheelScroll, { passive: true });
+
+  // El touch/trackpad ya desliza nativo vía overflow-x; para mouse (drag con
+  // click sostenido) se traduce el movimiento a scrollLeft manualmente.
   const scrubberEl = $('scrubber');
-  const scrubberSpeedTag = $('scrubberSpeedTag');
-  let dragging = false;
-  let dragTime = null;
-  let lastX = 0;
-  function onPointerDown(e){
-    dragging = true; autoFollow = false; stopPlaying();
+  let mouseDrag = null;
+  wheelViewport.addEventListener('mousedown', (e) => {
+    mouseDrag = { startX: e.clientX, startScroll: wheelViewport.scrollLeft };
+    wheelViewport.classList.add('is-dragging');
     scrubberEl.classList.add('is-dragging');
-    const point = e.touches ? e.touches[0] : e;
-    lastX = point.clientX;
-    dragTime = trackToTime(point.clientX);
-    setScrubTime(dragTime);
+    autoFollow = false; stopPlaying();
     e.preventDefault();
-  }
-  function onPointerMove(e){
-    if (!dragging) return;
-    const point = e.touches ? e.touches[0] : e;
-    const rect = scrubberTrack.getBoundingClientRect();
-    const dy = Math.max(0, point.clientY - rect.bottom);
-    const zone = speedForDy(dy);
-    const deltaPx = (point.clientX - lastX) * zone.factor;
-    lastX = point.clientX;
-    dragTime = clampToWindow(new Date(dragTime.getTime() + (deltaPx / rect.width) * WINDOW_MS));
-    setScrubTime(dragTime);
-    scrubberEl.classList.toggle('precision', !!zone.label);
-    scrubberSpeedTag.textContent = zone.label;
-  }
-  function onPointerUp(){
-    dragging = false;
-    scrubberEl.classList.remove('is-dragging', 'precision');
-    scrubberSpeedTag.textContent = '';
-  }
-  scrubberTrack.addEventListener('mousedown', onPointerDown);
-  scrubberTrack.addEventListener('touchstart', onPointerDown, {passive:false});
-  window.addEventListener('mousemove', onPointerMove);
-  window.addEventListener('touchmove', onPointerMove, {passive:false});
-  window.addEventListener('mouseup', onPointerUp);
-  window.addEventListener('touchend', onPointerUp);
+  });
+  window.addEventListener('mousemove', (e) => {
+    if (!mouseDrag) return;
+    wheelViewport.scrollLeft = mouseDrag.startScroll - (e.clientX - mouseDrag.startX);
+  });
+  window.addEventListener('mouseup', () => {
+    if (mouseDrag){ wheelViewport.classList.remove('is-dragging'); scrubberEl.classList.remove('is-dragging'); }
+    mouseDrag = null;
+  });
+  wheelViewport.addEventListener('touchstart', () => {
+    autoFollow = false; stopPlaying();
+    scrubberEl.classList.add('is-dragging');
+  }, { passive: true });
+  wheelViewport.addEventListener('touchend', () => { scrubberEl.classList.remove('is-dragging'); }, { passive: true });
+  wheelViewport.addEventListener('wheel', () => { autoFollow = false; stopPlaying(); }, { passive: true });
+
+  window.addEventListener('resize', () => {
+    const keepTime = scrubTime;
+    layoutWheel();
+    scrollToTime(keepTime, { smooth: false });
+  });
 
   function stopPlaying(){
     playing = false; clearInterval(playTimer);
@@ -762,19 +779,19 @@ window.initCronoApp = function(DATA){
       const advanceMs = 20 * 60000;
       let next = new Date(scrubTime.getTime() + advanceMs);
       if (next >= WINDOW_END){ next = WINDOW_END; stopPlaying(); }
-      setScrubTime(next);
+      scrollToTime(next, { smooth: false });
     }, 260);
   }
   btnPlay.addEventListener('click', () => {
     if (playing){ stopPlaying(); return; }
     autoFollow = false;
-    setScrubTime(clampToWindow(new Date()));
+    scrollToTime(clampToWindow(new Date()), { smooth: false });
     startPlaying();
   });
 
   btnLive.addEventListener('click', () => {
     stopPlaying(); autoFollow = true;
-    setScrubTime(new Date());
+    scrollToTime(new Date(), { smooth: true });
   });
 
   const kpiStrip = $('kpiStrip');
@@ -803,7 +820,7 @@ window.initCronoApp = function(DATA){
 
   setInterval(() => {
     if (autoFollow && !playing){
-      setScrubTime(new Date());
+      scrollToTime(new Date(), { smooth: false });
     } else {
       updateChrome(scrubTime);
     }
@@ -829,8 +846,8 @@ window.initCronoApp = function(DATA){
     if (all.some(t => stateOf(t, scrubTime) === 'active')) openCats.add(cat.id);
   });
 
-  updateScrubberUI();
-  updateChrome(scrubTime);
-  renderActiveView(scrubTime);
+  layoutWheel();
+  scrollToTime(scrubTime, { smooth: false });
+  setScrubTime(scrubTime);
   syncHeaderHeight();
 };

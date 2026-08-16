@@ -1,6 +1,6 @@
-const CACHE_NAME = 'cronoapp-v2';
+const CACHE_NAME = 'cronoapp-v3';
 const CORE_ASSETS = [
-  './', './index.html', './style.css', './app.js', './main.js', './cronogramas.js',
+  './', './index.html', './style.css?v=7', './app.js?v=3', './main.js?v=2', './cronogramas.js',
   './data.js', './data-sf2-electrico.js', './data-sf2-instrumentacion.js', './manifest.json'
 ];
 

@@ -16,7 +16,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=6" />
+<link rel="stylesheet" href="style.css?v=7" />
 </head>
 <body>
 
@@ -196,19 +196,14 @@
 <footer class="scrubber" id="scrubber">
   <div class="scrubber-bubble" id="scrubberBubble">
     <span id="scrubberBubbleDay">LUN 24</span> <b id="scrubberBubbleTime">08:00</b>
-    <span class="scrubber-speed-tag" id="scrubberSpeedTag"></span>
   </div>
   <div class="scrubber-row">
     <button class="scrubber-play" id="btnPlay" aria-label="Reproducir">
       <svg id="playIcon" viewBox="0 0 24 24" width="18" height="18"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>
     </button>
-    <div class="scrubber-main">
-      <div class="scrubber-days" id="scrubberDays"></div>
-      <div class="scrubber-track" id="scrubberTrack">
-        <div class="scrubber-segments" id="scrubberSegments"></div>
-        <div class="scrubber-ticks" id="scrubberTicks"></div>
-        <div class="scrubber-handle" id="scrubberHandle"></div>
-      </div>
+    <div class="wheel-viewport" id="wheelViewport">
+      <div class="wheel-track" id="wheelTrack"></div>
+      <div class="wheel-center-line"></div>
     </div>
     <button class="scrubber-live" id="btnLive" aria-label="Ir a ahora">
       <svg viewBox="0 0 24 24" width="17" height="17"><path d="M13 3 4 14h6l-1 7 9-11h-6l1-7z" fill="currentColor"/></svg>
@@ -221,8 +216,8 @@
 <script src="data.js"></script>
 <script src="data-sf2-electrico.js"></script>
 <script src="data-sf2-instrumentacion.js"></script>
-<script src="app.js"></script>
+<script src="app.js?v=3"></script>
 <script src="cronogramas.js"></script>
-<script src="main.js"></script>
+<script src="main.js?v=2"></script>
 </body>
 </html>
