@@ -16,6 +16,18 @@
   ];
   const colorFor = (idx) => PALETTE[idx % PALETTE.length];
 
+  const TASK_PALETTE = [
+    '#2563EB', '#059669', '#D97706', '#7C3AED', '#DB2777', 
+    '#0891B2', '#EA580C', '#0D9488', '#4F46E5', '#65A30D', 
+    '#E11D48', '#0284C7', '#9333EA', '#16A34A', '#CA8A04', 
+    '#C026D3', '#06B6D4', '#F43F5E'
+  ];
+
+  function getTaskColor(t, taskIdx, catIdx) {
+    const idx = ((t.id * 3) + (taskIdx !== undefined ? taskIdx : 0) + ((catIdx || 0) * 5)) % TASK_PALETTE.length;
+    return TASK_PALETTE[idx];
+  }
+
   const tasksByCat = {};
   DATA.categories.forEach(c => tasksByCat[c.id] = []);
   DATA.tasks.forEach(t => {
@@ -223,15 +235,21 @@
         div.style.left = pct(seg.start) + '%';
         barEl.appendChild(div);
       });
-      all.forEach(t => {
+      all.forEach((t, tIdx) => {
         const s = stateOf(t, now);
+        const tColor = getTaskColor(t, tIdx, idx);
         const seg = document.createElement('div');
-        seg.className = 'sys-seg state-' + s;
+        seg.className = 'sys-seg state-' + s + (t.isMilestone ? ' is-milestone' : '');
         const left = pct(t._start);
-        const width = Math.max(1.2, pct(t._end) - left);
+        const width = Math.max(1.8, pct(t._end) - left);
         seg.style.left = left + '%';
         seg.style.width = width + '%';
-        seg.style.background = color;
+        seg.style.background = tColor;
+        seg.title = `${t.name} (${fmtTime(t._start)}${t.isMilestone ? '' : ' - ' + fmtTime(t._end)})`;
+        seg.addEventListener('click', (e) => {
+          e.stopPropagation();
+          openDrawer(t, scrubTime);
+        });
         barEl.appendChild(seg);
       });
       const marker = document.createElement('div');
@@ -247,11 +265,13 @@
       const listEl = card.querySelector('.sys-tasklist');
       visible.slice().sort((a,b)=>a._start-b._start).forEach(t => {
         const s = stateOf(t, now);
+        const tIdx = all.indexOf(t);
+        const tColor = getTaskColor(t, tIdx, idx);
         const tagText = s==='active' ? 'En curso' : s==='upcoming' ? 'Próximo' : '✓ Listo';
         const row = document.createElement('div');
         row.className = 'sys-task state-' + s;
         row.innerHTML = `
-          <div class="sys-task-dot" style="background:${color}"></div>
+          <div class="sys-task-dot" style="background:${tColor}; box-shadow: 0 0 0 2px ${tColor}33;"></div>
           <div class="sys-task-main">
             <div class="sys-task-name${s==='done'?' done':''}">${t.name}</div>
             <div class="sys-task-meta">${fmtTime(t._start)}${t.isMilestone?'':'–'+fmtTime(t._end)} · ${t.duration}${t.om?' · OM '+t.om:''}</div>
@@ -277,9 +297,9 @@
     let items = [];
     DATA.categories.forEach((cat, idx) => {
       const all = tasksByCat[cat.id] || [];
-      all.forEach(t => {
+      all.forEach((t, tIdx) => {
         if (!matchesSearch(t, cat) || !matchesFilter(t, now)) return;
-        items.push({ t, cat, color: colorFor(idx) });
+        items.push({ t, cat, color: getTaskColor(t, tIdx, idx) });
       });
     });
     if (!items.length){ boardEmpty.hidden = false; return; }
@@ -420,7 +440,12 @@
   }
 
   function openDrawer(t, now){
-    const cat = DATA.categories.find(c => c.id === t.category);
+    const catIdx = DATA.categories.findIndex(c => c.id === t.category);
+    const cat = DATA.categories[catIdx];
+    const all = tasksByCat[t.category] || [];
+    const tIdx = all.indexOf(t);
+    const tColor = getTaskColor(t, tIdx, catIdx >= 0 ? catIdx : 0);
+
     $('drawerCat').textContent = cat ? (cat.icon + ' ' + cat.label) : '';
     $('drawerName').textContent = t.name;
     const s = stateOf(t, now);
@@ -434,7 +459,9 @@
     let progress = 0;
     if (s==='done') progress = 100;
     else if (s==='active') progress = Math.round(((now - t._start) / (t._end - t._start || 1)) * 100);
-    $('drawerProgress').style.width = progress + '%';
+    const progressEl = $('drawerProgress');
+    progressEl.style.width = progress + '%';
+    progressEl.style.background = tColor;
     $('drawerPct').textContent = progress + '% avance';
     drawer.classList.add('show'); drawerBackdrop.classList.add('show');
   }

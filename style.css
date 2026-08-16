@@ -231,11 +231,30 @@ body{
 }
 .sys-daydiv{ position:absolute; top:0; bottom:0; width:1px; background: var(--border-strong); z-index:1; }
 .sys-seg{
-  position:absolute; top:5px; bottom:5px; border-radius:6px; min-width:4px; z-index:2;
+  position:absolute; top:4px; bottom:4px; border-radius:5px; min-width:5px; z-index:2;
+  cursor:pointer; transition: transform .15s ease, filter .15s ease, box-shadow .15s ease;
+  box-shadow: 0 1px 2px rgba(0,0,0,.15);
+  border: 1px solid rgba(255,255,255,.25);
 }
-.sys-seg.state-upcoming{ opacity:.45; }
-.sys-seg.state-done{ opacity:.25; }
-.sys-seg.state-active{ box-shadow: 0 0 0 2px rgba(0,0,0,.08); }
+.sys-seg:hover{
+  transform: translateY(-1px) scaleY(1.1);
+  z-index: 10;
+  filter: brightness(1.12);
+  box-shadow: 0 3px 8px rgba(0,0,0,.22);
+}
+.sys-seg.is-milestone{
+  border-radius: 50%;
+  width: 10px !important;
+  margin-left: -5px;
+  box-shadow: 0 0 0 2px rgba(255,255,255,.9);
+}
+.sys-seg.state-upcoming{ opacity:.65; }
+.sys-seg.state-done{ opacity:.35; filter: saturate(.7); }
+.sys-seg.state-active{
+  opacity: 1;
+  box-shadow: 0 0 0 2px #fff, 0 0 8px rgba(0,0,0,.3);
+  z-index: 4;
+}
 .sys-now-marker{
   position:absolute; top:-3px; bottom:-3px; width:2.5px; background: var(--live); z-index:3;
   border-radius:2px;
