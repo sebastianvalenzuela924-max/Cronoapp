@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>CronoApp · Corte de Energía 2026</title>
+<meta name="description" content="Seguimiento en vivo del Programa de Trabajo Eléctrico Áreas Comunes 2026" />
+<link rel="manifest" href="manifest.json" />
+<meta name="theme-color" content="#4F46E5" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="CronoApp" />
+<link rel="apple-touch-icon" href="apple-touch-icon.png" />
+<link rel="icon" href="icon-192.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ===== HEADER ===== -->
+  <header class="hdr">
+    <div class="hdr-row1">
+      <div class="hdr-mark">⚡</div>
+      <h1 class="hdr-h1">CronoApp</h1>
+      <button class="hdr-share-btn" id="btnShare" aria-label="Compartir">
+        <svg viewBox="0 0 24 24" width="17" height="17"><circle cx="18" cy="5" r="2.6" stroke="currentColor" stroke-width="1.8" fill="none"/><circle cx="6" cy="12" r="2.6" stroke="currentColor" stroke-width="1.8" fill="none"/><circle cx="18" cy="19" r="2.6" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M8.3 10.7l7.4-4.2M8.3 13.3l7.4 4.2" stroke="currentColor" stroke-width="1.8"/></svg>
+      </button>
+      <div class="hdr-clock" id="hdrClock">--:--</div>
+    </div>
+    <p class="hdr-subtitle">Corte de Energía · Áreas Comunes 2026</p>
+    <div class="hdr-status" id="hdrLive">
+      <span class="live-dot" id="liveDot"></span>
+      <span class="hdr-status-text" id="liveLabel">Cargando…</span>
+    </div>
+  </header>
+
+  <!-- ===== SUMMARY CARD ===== -->
+  <section class="summary" id="summary">
+    <div class="summary-top">
+      <div>
+        <div class="summary-eyebrow">Programa general · PG26L2</div>
+        <div class="summary-phase" id="summaryPhase">—</div>
+      </div>
+      <div class="summary-pct" id="summaryPct">0%</div>
+    </div>
+    <div class="summary-bar"><div class="summary-bar-fill" id="summaryFill"></div></div>
+    <div class="summary-foot">
+      <span id="summaryFrom">—</span>
+      <span id="summaryTo">—</span>
+    </div>
+  </section>
+
+  <!-- ===== KPIs ===== -->
+  <section class="kpis" id="kpiStrip">
+    <button class="kpi kpi-active" data-kpi="active">
+      <span class="kpi-num" id="kpiActive">0</span>
+      <span class="kpi-label">En curso</span>
+    </button>
+    <button class="kpi kpi-soon" data-kpi="soon">
+      <span class="kpi-num" id="kpiNext">0</span>
+      <span class="kpi-label">Próx. 2 h</span>
+    </button>
+    <button class="kpi kpi-done" data-kpi="done">
+      <span class="kpi-num" id="kpiDone">0</span>
+      <span class="kpi-label">Listas</span>
+    </button>
+    <button class="kpi kpi-total" data-kpi="all">
+      <span class="kpi-num" id="kpiTotal">0</span>
+      <span class="kpi-label">Total</span>
+    </button>
+  </section>
+
+  <!-- ===== TOOLBAR ===== -->
+  <section class="toolbar">
+    <div class="search-wrap">
+      <svg viewBox="0 0 24 24" width="20" height="20"><path d="M10 4a6 6 0 100 12 6 6 0 000-12zm10 16l-5.4-5.4" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+      <input id="searchInput" type="text" placeholder="Buscar equipo, OM, EPS…" autocomplete="off" />
+    </div>
+    <div class="filter-chips" id="filterChips">
+      <button class="chip active" data-filter="all">Todos</button>
+      <button class="chip" data-filter="active">En curso</button>
+      <button class="chip" data-filter="upcoming">Próximos</button>
+      <button class="chip" data-filter="done">Listos</button>
+    </div>
+  </section>
+
+  <!-- ===== VIEW TOGGLE ===== -->
+  <div class="view-toggle" id="viewToggle">
+    <button class="view-btn active" data-view="systems">
+      <svg viewBox="0 0 24 24" width="16" height="16"><rect x="3" y="5" width="18" height="3.4" rx="1.7" fill="currentColor"/><rect x="3" y="10.3" width="12" height="3.4" rx="1.7" fill="currentColor"/><rect x="3" y="15.6" width="15" height="3.4" rx="1.7" fill="currentColor"/></svg>
+      Sistemas
+    </button>
+    <button class="view-btn" data-view="agenda">
+      <svg viewBox="0 0 24 24" width="16" height="16"><circle cx="5" cy="6" r="2" fill="currentColor"/><rect x="10" y="4.5" width="11" height="3" rx="1.5" fill="currentColor"/><circle cx="5" cy="14" r="2" fill="currentColor"/><rect x="10" y="12.5" width="11" height="3" rx="1.5" fill="currentColor"/><circle cx="5" cy="20" r="2" fill="currentColor" opacity=".4"/><rect x="10" y="18.5" width="7" height="3" rx="1.5" fill="currentColor" opacity=".4"/></svg>
+      Agenda
+    </button>
+  </div>
+
+  <!-- ===== VISTA 1: SISTEMAS (barras a todo el ancho, sin scroll lateral) ===== -->
+  <div class="view-panel" id="viewSystems">
+    <div class="sys-ruler" id="sysRuler"></div>
+    <div class="sys-list" id="sysList"></div>
+  </div>
+
+  <!-- ===== VISTA 2: AGENDA (lista vertical cronológica, grande y clara) ===== -->
+  <div class="view-panel" id="viewAgenda" hidden>
+    <div class="agenda" id="agenda"></div>
+  </div>
+
+  <div class="board-empty" id="boardEmpty" hidden>
+    <p>Sin resultados para tu búsqueda.</p>
+  </div>
+
+  <!-- ===== DETAIL DRAWER ===== -->
+  <aside class="drawer" id="drawer">
+    <div class="drawer-inner">
+      <button class="drawer-close" id="drawerClose" aria-label="Cerrar">✕</button>
+      <div class="drawer-eyebrow" id="drawerCat">Sistema</div>
+      <h2 id="drawerName">—</h2>
+      <div class="drawer-state" id="drawerState">—</div>
+      <div class="drawer-rows">
+        <div class="drow"><span>Ventana</span><b id="drawerWindow">—</b></div>
+        <div class="drow"><span>Duración</span><b id="drawerDuration">—</b></div>
+        <div class="drow"><span>OM</span><b id="drawerOM">—</b></div>
+        <div class="drow"><span>EPS / Contratista</span><b id="drawerEPS">—</b></div>
+      </div>
+      <div class="drawer-bar">
+        <div class="drawer-bar-fill" id="drawerProgress"></div>
+      </div>
+      <div class="drawer-pct" id="drawerPct">0%</div>
+    </div>
+  </aside>
+  <div class="drawer-backdrop" id="drawerBackdrop"></div>
+
+  <!-- ===== SHARE SHEET ===== -->
+  <aside class="drawer share-drawer" id="shareDrawer">
+    <div class="drawer-inner">
+      <button class="drawer-close" id="shareClose" aria-label="Cerrar">✕</button>
+      <div class="drawer-eyebrow">Compartir</div>
+      <h2>CronoApp</h2>
+      <div class="share-link-row">
+        <span id="shareUrlText">cronoapp.vercel.app</span>
+        <button class="share-copy-btn" id="btnCopyLink">Copiar</button>
+      </div>
+      <div class="share-actions">
+        <a class="share-action-btn wsp" id="btnShareWsp" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M12 2a10 10 0 00-8.6 15L2 22l5.2-1.4A10 10 0 1012 2zm5.8 14.2c-.2.7-1.4 1.3-2 1.4-.5.1-1.1.2-3.5-.8-3-1.2-4.9-4.2-5-4.4-.1-.2-1.2-1.6-1.2-3s.7-2.1 1-2.4c.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.5.2.5.7 1.8.8 1.9.1.2.1.3 0 .5-.1.2-.2.3-.3.5-.2.2-.3.3-.1.6.2.3.9 1.4 1.9 2.3 1.3 1.1 2.3 1.5 2.6 1.6.3.1.5.1.7-.1.2-.2.7-.8.9-1.1.2-.3.4-.2.7-.1.3.1 1.8.9 2.1 1 .3.2.5.2.6.3.1.2.1.7-.1 1.4z"/></svg>
+          WhatsApp
+        </a>
+      </div>
+
+      <button class="share-install-btn" id="btnInstall" hidden>
+        <svg viewBox="0 0 24 24" width="19" height="19"><path d="M12 3v12m0 0l-4-4m4 4l4-4M5 19h14" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Instalar app en un clic
+      </button>
+      <p class="share-install-hint" id="installHint" hidden></p>
+
+      <div class="share-qr-wrap">
+        <img id="shareQr" alt="Código QR de CronoApp" width="160" height="160" />
+        <span>Escanea para abrir en otro celular</span>
+      </div>
+
+      <div class="share-contact">
+        <span>¿Sugerencias o problemas?</span>
+        <a href="mailto:svalenzuela.dev@gmail.com">svalenzuela.dev@gmail.com</a>
+      </div>
+    </div>
+  </aside>
+
+</div>
+
+<!-- ===== BOTTOM TIME SCRUBBER (fixed, controls the whole app) ===== -->
+<footer class="scrubber" id="scrubber">
+  <div class="scrubber-bubble" id="scrubberBubble">
+    <span id="scrubberBubbleDay">LUN 24</span> <b id="scrubberBubbleTime">08:00</b>
+  </div>
+  <div class="scrubber-row">
+    <button class="scrubber-play" id="btnPlay" aria-label="Reproducir">
+      <svg id="playIcon" viewBox="0 0 24 24" width="18" height="18"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>
+    </button>
+    <div class="scrubber-main">
+      <div class="scrubber-days" id="scrubberDays"></div>
+      <div class="scrubber-track" id="scrubberTrack">
+        <div class="scrubber-segments" id="scrubberSegments"></div>
+        <div class="scrubber-ticks" id="scrubberTicks"></div>
+        <div class="scrubber-handle" id="scrubberHandle"></div>
+      </div>
+    </div>
+    <button class="scrubber-live" id="btnLive" aria-label="Ir a ahora">
+      <svg viewBox="0 0 24 24" width="17" height="17"><path d="M13 3 4 14h6l-1 7 9-11h-6l1-7z" fill="currentColor"/></svg>
+    </button>
+  </div>
+</footer>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
