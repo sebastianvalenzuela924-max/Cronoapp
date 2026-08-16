@@ -263,7 +263,7 @@ body{
   border-radius:2px;
 }
 
-.sys-tasklist{ display:none; flex-direction:column; border-top:1px solid var(--grid); }
+.sys-tasklist{ display:none; flex-direction:column; border-top:1px solid var(--grid); background: var(--bg); }
 .sys-card.open .sys-tasklist{ display:flex; }
 .sys-task{
   display:flex; align-items:center; gap:12px; padding: 11px 14px;
