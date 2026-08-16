@@ -648,14 +648,14 @@ body{
 }
 .overview-row-head:hover{ background: var(--bg-soft); }
 .overview-row-label{
-  flex:none; width:132px; display:flex; align-items:center; gap:6px;
-  overflow:hidden;
+  flex:none; width:132px; display:flex; align-items:flex-start; gap:6px;
+  padding-top:1px;
 }
 .overview-row-label .icon{ flex:none; font-size:13px; }
 .overview-row-label .label-text{ display:flex; flex-direction:column; gap:1px; min-width:0; overflow:hidden; }
 .overview-row-label .name{
   font-size:12px; font-weight:700; color: var(--text-dim);
-  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  line-height:1.25; word-break:break-word;
 }
 .overview-row-label .stats{ font-size:10px; font-weight:800; letter-spacing:.2px; color: var(--text-faint); }
 .overview-row-label .stats .s-active{ color: var(--warning); }

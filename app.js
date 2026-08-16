@@ -631,8 +631,8 @@ window.initCronoApp = function(DATA){
           taskRow.innerHTML = `
             <span class="dot" style="background:${tColor}"></span>
             <span class="name">${t.name}</span>
-            <span class="meta">${dayLabel} · ${fmtTime(t._start)}${t.isMilestone ? '' : '–' + fmtTime(t._end)}</span>
             <span class="chip ${s}">${tagText}</span>
+            <span class="meta">${dayLabel} · ${fmtTime(t._start)}${t.isMilestone ? '' : '–' + fmtTime(t._end)}</span>
           `;
           taskRow.addEventListener('click', (e) => { e.stopPropagation(); openDrawer(t, scrubTime); });
           listEl.appendChild(taskRow);
