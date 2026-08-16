@@ -129,6 +129,7 @@ window.initCronoApp = function(DATA){
   let activeFilter = 'all';
   let searchQuery = '';
   let agendaCategoryFilter = 'all';
+  let sysCategoryFilter = 'all';
   const openCats = new Set();
   let viewMode = 'systems';
 
@@ -147,12 +148,9 @@ window.initCronoApp = function(DATA){
   const viewSystems = $('viewSystems');
   const viewAgenda = $('viewAgenda');
   const agendaEl = $('agenda');
-  // Filtro de sistema en Agenda: dropdown propio (en vez de <select> nativo)
-  // para que combine con el resto de la estética de la app.
-  const agendaFilterBtn = $('agendaFilterBtn');
-  const agendaFilterLabel = $('agendaFilterLabel');
-  const agendaFilterPanel = $('agendaFilterPanel');
-
+  // Filtro de sistema (dropdown propio, en vez de <select> nativo, para
+  // combinar con la estética de la app). Se usa tanto en Agenda como en
+  // Sistemas, cada uno con su propio botón/panel pero la misma lógica.
   function buildFilterOption(id, icon, label, count, isSelected){
     const opt = document.createElement('div');
     opt.className = 'agenda-filter-option' + (isSelected ? ' selected' : '');
@@ -161,45 +159,56 @@ window.initCronoApp = function(DATA){
     opt.innerHTML = `<span class="opt-icon">${icon}</span><span class="opt-label">${label}</span><span class="opt-count">${count}</span>`;
     return opt;
   }
-  function renderAgendaFilterPanel(){
-    agendaFilterPanel.innerHTML = '';
-    agendaFilterPanel.appendChild(buildFilterOption('all', '🗂️', 'Todos los sistemas', DATA.tasks.length, agendaCategoryFilter === 'all'));
-    DATA.categories.forEach(cat => {
-      const all = tasksByCat[cat.id] || [];
-      if (!all.length) return;
-      agendaFilterPanel.appendChild(buildFilterOption(cat.id, cat.icon, cat.label, all.length, agendaCategoryFilter === cat.id));
-    });
-  }
-  renderAgendaFilterPanel();
-
-  function closeAgendaFilter(){
-    agendaFilterPanel.hidden = true;
-    agendaFilterBtn.classList.remove('open');
-    agendaFilterBtn.setAttribute('aria-expanded', 'false');
-  }
-  agendaFilterBtn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    const willOpen = agendaFilterPanel.hidden;
-    closeAgendaFilter();
-    if (willOpen){
-      agendaFilterPanel.hidden = false;
-      agendaFilterBtn.classList.add('open');
-      agendaFilterBtn.setAttribute('aria-expanded', 'true');
+  const filterControls = [];
+  function setupCategoryFilter(btn, label, panel, getValue, onSelect){
+    function renderPanel(){
+      const current = getValue();
+      panel.innerHTML = '';
+      panel.appendChild(buildFilterOption('all', '🗂️', 'Todos los sistemas', DATA.tasks.length, current === 'all'));
+      DATA.categories.forEach(cat => {
+        const all = tasksByCat[cat.id] || [];
+        if (!all.length) return;
+        panel.appendChild(buildFilterOption(cat.id, cat.icon, cat.label, all.length, current === cat.id));
+      });
     }
-  });
-  agendaFilterPanel.addEventListener('click', (e) => {
-    const opt = e.target.closest('.agenda-filter-option');
-    if (!opt) return;
-    agendaCategoryFilter = opt.dataset.value;
-    const cat = DATA.categories.find(c => c.id === agendaCategoryFilter);
-    agendaFilterLabel.textContent = cat ? (cat.icon + ' ' + cat.label) : 'Todos los sistemas';
-    agendaFilterBtn.classList.toggle('filtered', agendaCategoryFilter !== 'all');
-    renderAgendaFilterPanel();
-    closeAgendaFilter();
-    renderActiveView(scrubTime);
-  });
+    function close(){
+      panel.hidden = true;
+      btn.classList.remove('open');
+      btn.setAttribute('aria-expanded', 'false');
+    }
+    function open(){
+      filterControls.forEach(c => { if (c.close !== close) c.close(); });
+      panel.hidden = false;
+      btn.classList.add('open');
+      btn.setAttribute('aria-expanded', 'true');
+    }
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (panel.hidden) open(); else close();
+    });
+    panel.addEventListener('click', (e) => {
+      const opt = e.target.closest('.agenda-filter-option');
+      if (!opt) return;
+      const value = opt.dataset.value;
+      const cat = DATA.categories.find(c => c.id === value);
+      label.textContent = cat ? (cat.icon + ' ' + cat.label) : 'Todos los sistemas';
+      btn.classList.toggle('filtered', value !== 'all');
+      onSelect(value);
+      renderPanel();
+      close();
+      renderActiveView(scrubTime);
+    });
+    renderPanel();
+    const control = { renderPanel, close };
+    filterControls.push(control);
+    return control;
+  }
+  setupCategoryFilter($('agendaFilterBtn'), $('agendaFilterLabel'), $('agendaFilterPanel'),
+    () => agendaCategoryFilter, (v) => { agendaCategoryFilter = v; });
+  setupCategoryFilter($('sysFilterBtn'), $('sysFilterLabel'), $('sysFilterPanel'),
+    () => sysCategoryFilter, (v) => { sysCategoryFilter = v; });
   document.addEventListener('click', (e) => {
-    if (!agendaFilterPanel.hidden && !e.target.closest('.agenda-filter-wrap')) closeAgendaFilter();
+    if (!e.target.closest('.agenda-filter-wrap')) filterControls.forEach(c => c.close());
   });
 
   const scrubberBubbleDay = $('scrubberBubbleDay'), scrubberBubbleTime = $('scrubberBubbleTime');
@@ -254,7 +263,8 @@ window.initCronoApp = function(DATA){
 
     const orderedCats = DATA.categories
       .map((cat, idx) => ({ cat, idx }))
-      .filter(({ cat }) => (tasksByCat[cat.id] || []).length);
+      .filter(({ cat }) => (tasksByCat[cat.id] || []).length)
+      .filter(({ cat }) => sysCategoryFilter === 'all' || cat.id === sysCategoryFilter);
 
     orderedCats.forEach(({ cat, idx }) => {
       const all = tasksByCat[cat.id] || [];
@@ -617,10 +627,11 @@ window.initCronoApp = function(DATA){
           const tagText = s === 'active' ? 'En curso' : s === 'upcoming' ? 'Próximo' : '✓ Listo';
           const taskRow = document.createElement('div');
           taskRow.className = 'overview-task state-' + s;
+          const dayLabel = DAY_NAMES[t._start.getDay()] + ' ' + String(t._start.getDate()).padStart(2, '0');
           taskRow.innerHTML = `
             <span class="dot" style="background:${tColor}"></span>
             <span class="name">${t.name}</span>
-            <span class="meta">${fmtTime(t._start)}${t.isMilestone ? '' : '–' + fmtTime(t._end)}</span>
+            <span class="meta">${dayLabel} · ${fmtTime(t._start)}${t.isMilestone ? '' : '–' + fmtTime(t._end)}</span>
             <span class="chip ${s}">${tagText}</span>
           `;
           taskRow.addEventListener('click', (e) => { e.stopPropagation(); openDrawer(t, scrubTime); });
@@ -674,6 +685,23 @@ window.initCronoApp = function(DATA){
     drawerBackdrop.classList.add('show');
   }
   function closeShare(){ shareDrawer.classList.remove('show'); drawerBackdrop.classList.remove('show'); }
+
+  // "Abrir en Chrome": en Android se puede forzar Chrome específicamente vía
+  // un intent:// URL; en iOS, Chrome expone el esquema googlechrome(s)://
+  // si está instalada. En desktop no hay forma de elegir el navegador desde
+  // JS, así que simplemente se abre en una pestaña nueva.
+  $('btnOpenChrome').addEventListener('click', () => {
+    const url = currentShareUrl();
+    const ua = navigator.userAgent;
+    if (/Android/i.test(ua)){
+      const noProtocol = url.replace(/^https?:\/\//, '');
+      window.location.href = 'intent://' + noProtocol + '#Intent;scheme=https;package=com.android.chrome;end';
+    } else if (/iPhone|iPad|iPod/i.test(ua)){
+      window.location.href = url.replace(/^https:\/\//, 'googlechromes://').replace(/^http:\/\//, 'googlechrome://');
+    } else {
+      window.open(url, '_blank', 'noopener');
+    }
+  });
 
   btnShare.addEventListener('click', openShare);
   shareClose.addEventListener('click', closeShare);

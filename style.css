@@ -588,6 +588,7 @@ body{
   cursor:pointer; border:none;
 }
 .share-action-btn.wsp{ background: #E7F8EC; color: #128C4A; }
+.share-action-btn.chrome{ background: #EAF1FF; color: #1A56DB; }
 .share-qr-wrap{
   display:flex; flex-direction:column; align-items:center; gap:8px;
   padding: 18px 0 6px; border-top:1px dashed var(--border);
@@ -613,6 +614,7 @@ body{
   font-size:12px; color: var(--text-faint); font-weight:600;
 }
 .share-contact a{ color: var(--brand); font-weight:800; text-decoration:none; }
+.share-credit{ margin:10px 0 0; text-align:center; font-size:11px; font-weight:700; color: var(--text-faint); letter-spacing:.2px; }
 
 /* ===== PANORAMA GENERAL: todos los sistemas en una sola línea de tiempo =====
    z-index queda por DEBAJO del scrubber (60) a propósito: así la rueda de
@@ -678,17 +680,22 @@ body{
 .overview-tasklist{ display:none; flex-direction:column; padding: 0 18px 8px 18px; }
 .overview-row.open .overview-tasklist{ display:flex; }
 .overview-task{
-  display:flex; align-items:center; gap:8px; padding:6px 0; cursor:pointer;
+  display:flex; flex-wrap:wrap; align-items:center; gap:3px 8px; padding:7px 0; cursor:pointer;
   border-top:1px dashed var(--grid);
 }
 .overview-task:first-child{ border-top:none; }
 .overview-task .dot{ flex:none; width:7px; height:7px; border-radius:50%; }
 .overview-task .name{
-  flex:1; min-width:0; font-size:12.5px; font-weight:700; color: var(--text);
+  flex:1; min-width:100px; font-size:12.5px; font-weight:700; color: var(--text);
   overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
 }
 .overview-task.state-done .name{ color: var(--text-dim); }
-.overview-task .meta{ flex:none; font-size:11px; font-weight:700; color: var(--text-faint); }
+/* meta (día + hora) baja a su propia línea, alineada bajo el nombre, para
+   no restarle ancho y así nunca solapar ni cortar el nombre de la tarea. */
+.overview-task .meta{
+  flex:none; width:100%; padding-left:15px;
+  font-size:10.5px; font-weight:700; color: var(--text-faint);
+}
 .overview-task .chip{ flex:none; font-size:9.5px; font-weight:800; padding:2px 7px; border-radius:999px; }
 .overview-task .chip.active{ background: var(--warning-soft); color: var(--warning); }
 .overview-task .chip.upcoming{ background: var(--upcoming-soft); color: var(--upcoming); }
