@@ -71,6 +71,33 @@ window.initCronoApp = function(DATA){
   }
   function fmtTime(d){ return String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0'); }
 
+  // Cuenta regresiva en días/horas/minutos (sin segundos) para saber cuánto
+  // falta para que una tarea comience o termine, relativa al scrubTime.
+  function fmtCountdown(ms){
+    if (ms <= 0) return null;
+    const totalMin = Math.floor(ms / 60000);
+    const days = Math.floor(totalMin / 1440);
+    const hours = Math.floor((totalMin % 1440) / 60);
+    const mins = totalMin % 60;
+    const parts = [];
+    if (days > 0) parts.push(days + 'd');
+    if (days > 0 || hours > 0) parts.push(hours + 'h');
+    parts.push(mins + 'm');
+    return parts.join(' ');
+  }
+  function countdownInfo(t, now){
+    const s = stateOf(t, now);
+    if (s === 'upcoming'){
+      const txt = fmtCountdown(t._start - now);
+      return txt ? { text: 'Comienza en ' + txt, kind: 'upcoming' } : null;
+    }
+    if (s === 'active'){
+      const txt = fmtCountdown(t._end - now);
+      return txt ? { text: 'Termina en ' + txt, kind: 'active' } : null;
+    }
+    return null;
+  }
+
   const DAY_NAMES = ['DOM','LUN','MAR','MIÉ','JUE','VIE','SÁB'];
   function buildDaySegments(){
     const segs = [];
@@ -278,6 +305,7 @@ window.initCronoApp = function(DATA){
         const tIdx = all.indexOf(t);
         const tColor = getTaskColor(t, tIdx, idx);
         const tagText = s==='active' ? 'En curso' : s==='upcoming' ? 'Próximo' : '✓ Listo';
+        const countdown = countdownInfo(t, now);
         const row = document.createElement('div');
         row.className = 'sys-task state-' + s;
         row.innerHTML = `
@@ -285,6 +313,7 @@ window.initCronoApp = function(DATA){
           <div class="sys-task-main">
             <div class="sys-task-name${s==='done'?' done':''}">${t.name}</div>
             <div class="sys-task-meta">${fmtTime(t._start)}${t.isMilestone?'':'–'+fmtTime(t._end)} · ${t.duration}${t.om?' · OM '+t.om:''}</div>
+            ${countdown ? `<div class="sys-task-countdown ${countdown.kind}">⏱ ${countdown.text}</div>` : ''}
           </div>
           <div class="sys-task-chip ${s}">${tagText}</div>
         `;
@@ -373,7 +402,9 @@ window.initCronoApp = function(DATA){
     const row = document.createElement('div');
     row.className = 'agenda-item';
     const tagText = s==='active' ? 'En curso' : s==='upcoming' ? 'Próximo' : '✓ Listo';
+    const countdown = countdownInfo(t, now);
     const metaTags = [];
+    if (countdown) metaTags.push(`<span class="agenda-tag countdown ${countdown.kind}">⏱ ${countdown.text}</span>`);
     if (t.om) metaTags.push(`<span class="agenda-tag">OM ${t.om}</span>`);
     if (t.eps) metaTags.push(`<span class="agenda-tag">${t.eps}</span>`);
     metaTags.push(`<span class="agenda-tag">${t.duration}</span>`);
@@ -462,6 +493,11 @@ window.initCronoApp = function(DATA){
     const stateEl = $('drawerState');
     stateEl.className = 'drawer-state ' + s;
     stateEl.textContent = s==='active' ? '⚡ En ejecución' : s==='upcoming' ? '⏳ Programado' : '✔ Completado';
+    const countdown = countdownInfo(t, now);
+    const drowCountdown = $('drowCountdown');
+    drowCountdown.hidden = !countdown;
+    drowCountdown.className = 'drow' + (countdown ? ' ' + countdown.kind : '');
+    if (countdown) $('drawerCountdown').textContent = countdown.text;
     $('drawerWindow').textContent = `${fmtDayTime(t._start)} → ${fmtDayTime(t._end)}`;
     $('drawerDuration').textContent = t.duration;
     $('drawerOM').textContent = t.om || '—';
