@@ -273,11 +273,16 @@ body{
 }
 .sys-task:last-child{ border-bottom:none; }
 .sys-task.state-active{
-  background: linear-gradient(90deg, rgba(245, 158, 11, 0.07) 0%, transparent 100%);
-  border-left: 3.5px solid #F59E0B;
+  background: linear-gradient(90deg, rgba(245, 158, 11, 0.16) 0%, rgba(245, 158, 11, 0.03) 100%);
+  border-left: 3.5px solid var(--warning);
+}
+.sys-task.state-upcoming{
+  background: linear-gradient(90deg, rgba(37, 99, 235, 0.11) 0%, rgba(37, 99, 235, 0.02) 100%);
+  border-left: 3.5px solid var(--upcoming);
 }
 .sys-task.state-done{
-  opacity: 0.85;
+  background: linear-gradient(90deg, rgba(22, 163, 74, 0.12) 0%, rgba(22, 163, 74, 0.02) 100%);
+  border-left: 3.5px solid var(--success);
 }
 .sys-task-dot{
   width:10px; height:10px; border-radius:50%; flex:none;
@@ -414,6 +419,12 @@ body{
 }
 .scrubber-bubble span{ font-size:11.5px; font-weight:800; color:#64748B; letter-spacing:.3px; }
 .scrubber-bubble b{ font-size:17px; font-weight:900; }
+.scrubber-speed-tag{
+  display:none; font-size:9px; font-weight:900; letter-spacing:.4px;
+  background: var(--brand); color:#fff; padding:3px 6px; border-radius:6px;
+  vertical-align: middle;
+}
+.scrubber-speed-tag:not(:empty){ display:inline-block; }
 
 .scrubber-row{ display:flex; align-items:center; gap:8px; min-width:0; }
 .scrubber-play, .scrubber-live{
@@ -451,13 +462,18 @@ body{
 .scrubber-handle{
   position:absolute; top:3px; bottom:3px; width:6px; background: var(--brand);
   border-radius:3px; box-shadow: 0 0 0 6px rgba(79,70,229,.16);
+  transition: box-shadow .18s ease;
 }
 .scrubber-handle::before{
   content:''; position:absolute; top:50%; left:50%; transform: translate(-50%,-50%);
   width:26px; height:26px; border-radius:50%; background: var(--brand); border:3px solid #1B2233;
   background-image: repeating-linear-gradient(90deg, rgba(255,255,255,.55) 0 2px, transparent 2px 5px);
   background-position: center; background-repeat: no-repeat; background-size: 12px 12px;
+  transition: transform .18s ease;
 }
+.scrubber.precision .scrubber-track{ background: rgba(79,70,229,.14); }
+.scrubber.precision .scrubber-handle{ box-shadow: 0 0 0 9px rgba(79,70,229,.22); }
+.scrubber.precision .scrubber-handle::before{ transform: translate(-50%,-50%) scale(.82); }
 
 .drawer-backdrop{
   position:fixed; inset:0; background: rgba(15,23,42,.35);

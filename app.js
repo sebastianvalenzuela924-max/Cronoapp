@@ -641,37 +641,53 @@
     return new Date(WINDOW_START.getTime() + f * WINDOW_MS);
   }
 
-  function snapTime(d){
-    const STEP_MS = 5 * 60000;
-    return new Date(Math.round(d.getTime() / STEP_MS) * STEP_MS);
+  // Scrubber al estilo "video slow-scrub" de iOS: por defecto el cursor sigue
+  // el dedo 1:1 (cero retraso). Si el usuario desliza el dedo hacia abajo,
+  // se activa un modo de precisión por tramos que reduce la velocidad para
+  // ajustar minuto a minuto sin perder la sensación natural del arrastre.
+  const SPEED_ZONES = [
+    { dy: 0,  factor: 1,    label: '' },
+    { dy: 26, factor: 0.35, label: 'PRECISO' },
+    { dy: 68, factor: 0.08, label: 'MUY PRECISO' },
+  ];
+  function speedForDy(dy){
+    let zone = SPEED_ZONES[0];
+    for (const z of SPEED_ZONES) if (dy >= z.dy) zone = z;
+    return zone;
   }
 
-  // El deslizamiento es relativo (no salta al punto exacto del dedo) y se
-  // atenúa con DRAG_SENSITIVITY para que mover el dedo requiera más recorrido
-  // por cada minuto avanzado, dando control fino sobre una ventana de varios días.
-  const DRAG_SENSITIVITY = 0.35;
   const scrubberEl = $('scrubber');
+  const scrubberSpeedTag = $('scrubberSpeedTag');
   let dragging = false;
-  let dragStartX = 0;
-  let dragStartTime = null;
+  let dragTime = null;
+  let lastX = 0;
   function onPointerDown(e){
     dragging = true; autoFollow = false; stopPlaying();
     scrubberEl.classList.add('is-dragging');
-    const x = e.touches ? e.touches[0].clientX : e.clientX;
-    dragStartX = x;
-    dragStartTime = trackToTime(x);
-    setScrubTime(dragStartTime);
+    const point = e.touches ? e.touches[0] : e;
+    lastX = point.clientX;
+    dragTime = trackToTime(point.clientX);
+    setScrubTime(dragTime);
     e.preventDefault();
   }
   function onPointerMove(e){
     if (!dragging) return;
-    const x = e.touches ? e.touches[0].clientX : e.clientX;
+    const point = e.touches ? e.touches[0] : e;
     const rect = scrubberTrack.getBoundingClientRect();
-    const deltaPx = (x - dragStartX) * DRAG_SENSITIVITY;
-    const deltaMs = (deltaPx / rect.width) * WINDOW_MS;
-    setScrubTime(snapTime(new Date(dragStartTime.getTime() + deltaMs)));
+    const dy = Math.max(0, point.clientY - rect.bottom);
+    const zone = speedForDy(dy);
+    const deltaPx = (point.clientX - lastX) * zone.factor;
+    lastX = point.clientX;
+    dragTime = clampToWindow(new Date(dragTime.getTime() + (deltaPx / rect.width) * WINDOW_MS));
+    setScrubTime(dragTime);
+    scrubberEl.classList.toggle('precision', !!zone.label);
+    scrubberSpeedTag.textContent = zone.label;
   }
-  function onPointerUp(){ dragging = false; scrubberEl.classList.remove('is-dragging'); }
+  function onPointerUp(){
+    dragging = false;
+    scrubberEl.classList.remove('is-dragging', 'precision');
+    scrubberSpeedTag.textContent = '';
+  }
   scrubberTrack.addEventListener('mousedown', onPointerDown);
   scrubberTrack.addEventListener('touchstart', onPointerDown, {passive:false});
   window.addEventListener('mousemove', onPointerMove);
