@@ -67,15 +67,17 @@ body{
   background: var(--bg);
   border-bottom: 1px solid var(--border);
 }
-.hdr-row1{ display:flex; align-items:center; gap:10px; width:100%; }
+.hdr-row1{ display:flex; align-items:flex-start; gap:10px; width:100%; }
 .hdr-mark{
   width:38px; height:38px; border-radius:11px; flex:none;
   display:flex; align-items:center; justify-content:center; font-size:18px;
   background: var(--brand-soft);
 }
 .hdr-h1{
-  flex:1 1 auto; min-width:0; margin:0; font-size:18px; font-weight:800; letter-spacing:-.2px;
-  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  flex:1 1 auto; min-width:0; margin:0; padding-top:8px; font-size:17px; font-weight:800; letter-spacing:-.2px;
+  line-height:1.25;
+  display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical;
+  overflow:hidden; text-overflow:ellipsis;
 }
 .hdr-share-btn{
   width:32px; height:32px; border-radius:50%; flex:none;
@@ -306,17 +308,39 @@ body{
 .sys-task-chip.upcoming{ background: var(--upcoming-soft); color: var(--upcoming); }
 .sys-task-chip.done{ background: var(--success-soft); color: var(--success); }
 
-.agenda-system-filter-wrap{
-  display:flex; align-items:center; gap:8px;
-  margin: 0 18px 10px; padding: 10px 14px;
-  border:1.5px solid var(--border); border-radius: 12px;
-  background: var(--bg-soft); color: var(--text-faint);
+.agenda-filter-wrap{ position:relative; margin: 0 18px 10px; }
+.agenda-filter-btn{
+  width:100%; display:flex; align-items:center; gap:9px;
+  border:1.5px solid var(--border); border-radius:12px;
+  padding:11px 14px; background:var(--bg-soft); color:var(--text-faint);
+  font-family:var(--font); cursor:pointer; transition: background .15s ease, border-color .15s ease;
 }
-.agenda-system-filter{
-  flex:1; border:none; outline:none; background:transparent; color:var(--text);
-  font-family: var(--font); font-size:13.5px; font-weight:700;
-  appearance:none; -webkit-appearance:none;
+.agenda-filter-btn span{
+  flex:1; min-width:0; text-align:left; color:var(--text);
+  font-size:13.5px; font-weight:700;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
 }
+.agenda-filter-btn .agenda-filter-chev{ flex:none; color:var(--text-faint); transition: transform .2s ease; }
+.agenda-filter-btn.open{ border-color:var(--brand); background:var(--brand-soft); }
+.agenda-filter-btn.open .agenda-filter-chev{ transform:rotate(180deg); color:var(--brand); }
+.agenda-filter-btn.filtered span{ color:var(--brand); }
+
+.agenda-filter-panel{
+  position:absolute; left:0; right:0; top:calc(100% + 6px); z-index:45;
+  background:var(--bg); border:1.5px solid var(--border); border-radius:14px;
+  box-shadow: var(--shadow-lg); padding:6px; max-height:min(320px, 60vh); overflow-y:auto;
+}
+.agenda-filter-panel[hidden]{ display:none; }
+.agenda-filter-option{
+  display:flex; align-items:center; gap:9px; padding:10px 11px; border-radius:10px;
+  font-size:13.5px; font-weight:700; color:var(--text-dim); cursor:pointer;
+}
+.agenda-filter-option:active{ background: var(--bg-soft); }
+.agenda-filter-option.selected{ background: var(--brand-soft); color: var(--brand); }
+.agenda-filter-option .opt-icon{ flex:none; font-size:15px; }
+.agenda-filter-option .opt-label{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.agenda-filter-option .opt-count{ flex:none; font-size:11px; font-weight:800; color:var(--text-faint); }
+.agenda-filter-option.selected .opt-count{ color:var(--brand); }
 
 .agenda{ padding: 4px 18px 100px; }
 
@@ -588,6 +612,31 @@ body{
 
 @media (min-width: 780px){
   .app{ border-left:1px solid var(--border); border-right:1px solid var(--border); }
+}
+
+/* ===== Modo escritorio: aprovecha el ancho horizontal en pantallas grandes.
+   El móvil (< 1024px) no se toca, queda exactamente como está. ===== */
+@media (min-width: 1024px){
+  body{ background: var(--bg-soft); }
+  .app{
+    max-width: 1180px;
+    margin: 22px auto;
+    min-height: calc(100dvh - 44px);
+    border-radius: 20px;
+    border-left:1px solid var(--border); border-right:1px solid var(--border);
+    box-shadow: 0 24px 60px rgba(15,23,42,.14);
+    padding-bottom: 104px;
+    overflow: hidden;
+  }
+  .hdr{ border-radius: 20px 20px 0 0; }
+  .sys-list{
+    display:grid; grid-template-columns: repeat(2, minmax(0,1fr));
+    align-items:start; gap:14px 18px;
+  }
+  .agenda{ max-width: 720px; margin: 0 auto; }
+  .agenda-filter-wrap{ max-width: 720px; margin-left:auto; margin-right:auto; }
+  .scrubber{ max-width: 1100px; }
+  .menu-cards{ max-width: 620px; }
 }
 @media (max-width: 360px){
   :root{ --frozen-w: 132px; }

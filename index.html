@@ -16,7 +16,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=7" />
+<link rel="stylesheet" href="style.css?v=9" />
 </head>
 <body>
 
@@ -122,11 +122,13 @@
 
   <!-- ===== VISTA 2: AGENDA (lista vertical cronológica, grande y clara) ===== -->
   <div class="view-panel" id="viewAgenda" hidden>
-    <div class="agenda-system-filter-wrap">
-      <svg viewBox="0 0 24 24" width="16" height="16"><path d="M4 6h16M7 12h10M10 18h4" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
-      <select id="agendaSystemFilter" class="agenda-system-filter" aria-label="Filtrar agenda por sistema">
-        <option value="all">Todos los sistemas</option>
-      </select>
+    <div class="agenda-filter-wrap">
+      <button class="agenda-filter-btn" id="agendaFilterBtn" type="button" aria-haspopup="listbox" aria-expanded="false">
+        <svg viewBox="0 0 24 24" width="16" height="16"><path d="M4 6h16M7 12h10M10 18h4" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+        <span id="agendaFilterLabel">Todos los sistemas</span>
+        <svg class="agenda-filter-chev" viewBox="0 0 24 24" width="14" height="14"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <div class="agenda-filter-panel" id="agendaFilterPanel" role="listbox" hidden></div>
     </div>
     <div class="agenda" id="agenda"></div>
   </div>
@@ -216,7 +218,7 @@
 <script src="data.js"></script>
 <script src="data-sf2-electrico.js"></script>
 <script src="data-sf2-instrumentacion.js"></script>
-<script src="app.js?v=3"></script>
+<script src="app.js?v=4"></script>
 <script src="cronogramas.js"></script>
 <script src="main.js?v=2"></script>
 </body>

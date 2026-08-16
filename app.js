@@ -147,18 +147,59 @@ window.initCronoApp = function(DATA){
   const viewSystems = $('viewSystems');
   const viewAgenda = $('viewAgenda');
   const agendaEl = $('agenda');
-  const agendaSystemFilter = $('agendaSystemFilter');
-  DATA.categories.forEach(cat => {
-    const all = tasksByCat[cat.id] || [];
-    if (!all.length) return;
-    const opt = document.createElement('option');
-    opt.value = cat.id;
-    opt.textContent = cat.icon + ' ' + cat.label;
-    agendaSystemFilter.appendChild(opt);
+  // Filtro de sistema en Agenda: dropdown propio (en vez de <select> nativo)
+  // para que combine con el resto de la estética de la app.
+  const agendaFilterBtn = $('agendaFilterBtn');
+  const agendaFilterLabel = $('agendaFilterLabel');
+  const agendaFilterPanel = $('agendaFilterPanel');
+
+  function buildFilterOption(id, icon, label, count, isSelected){
+    const opt = document.createElement('div');
+    opt.className = 'agenda-filter-option' + (isSelected ? ' selected' : '');
+    opt.setAttribute('role', 'option');
+    opt.dataset.value = id;
+    opt.innerHTML = `<span class="opt-icon">${icon}</span><span class="opt-label">${label}</span><span class="opt-count">${count}</span>`;
+    return opt;
+  }
+  function renderAgendaFilterPanel(){
+    agendaFilterPanel.innerHTML = '';
+    agendaFilterPanel.appendChild(buildFilterOption('all', '🗂️', 'Todos los sistemas', DATA.tasks.length, agendaCategoryFilter === 'all'));
+    DATA.categories.forEach(cat => {
+      const all = tasksByCat[cat.id] || [];
+      if (!all.length) return;
+      agendaFilterPanel.appendChild(buildFilterOption(cat.id, cat.icon, cat.label, all.length, agendaCategoryFilter === cat.id));
+    });
+  }
+  renderAgendaFilterPanel();
+
+  function closeAgendaFilter(){
+    agendaFilterPanel.hidden = true;
+    agendaFilterBtn.classList.remove('open');
+    agendaFilterBtn.setAttribute('aria-expanded', 'false');
+  }
+  agendaFilterBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const willOpen = agendaFilterPanel.hidden;
+    closeAgendaFilter();
+    if (willOpen){
+      agendaFilterPanel.hidden = false;
+      agendaFilterBtn.classList.add('open');
+      agendaFilterBtn.setAttribute('aria-expanded', 'true');
+    }
   });
-  agendaSystemFilter.addEventListener('change', () => {
-    agendaCategoryFilter = agendaSystemFilter.value;
+  agendaFilterPanel.addEventListener('click', (e) => {
+    const opt = e.target.closest('.agenda-filter-option');
+    if (!opt) return;
+    agendaCategoryFilter = opt.dataset.value;
+    const cat = DATA.categories.find(c => c.id === agendaCategoryFilter);
+    agendaFilterLabel.textContent = cat ? (cat.icon + ' ' + cat.label) : 'Todos los sistemas';
+    agendaFilterBtn.classList.toggle('filtered', agendaCategoryFilter !== 'all');
+    renderAgendaFilterPanel();
+    closeAgendaFilter();
     renderActiveView(scrubTime);
+  });
+  document.addEventListener('click', (e) => {
+    if (!agendaFilterPanel.hidden && !e.target.closest('.agenda-filter-wrap')) closeAgendaFilter();
   });
 
   const scrubberBubbleDay = $('scrubberBubbleDay'), scrubberBubbleTime = $('scrubberBubbleTime');
