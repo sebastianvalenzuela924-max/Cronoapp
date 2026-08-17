@@ -674,10 +674,12 @@ window.initCronoApp = function(DATA){
     overviewOpen = true;
     renderOverview(scrubTime);
     overviewPanel.classList.add('show');
+    document.body.classList.add('overview-active');
   }
   function closeOverview(){
     overviewOpen = false;
     overviewPanel.classList.remove('show');
+    document.body.classList.remove('overview-active');
   }
   btnOverview.addEventListener('click', openOverview);
   overviewClose.addEventListener('click', closeOverview);
