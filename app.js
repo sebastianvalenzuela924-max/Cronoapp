@@ -156,9 +156,85 @@ window.initCronoApp = function(DATA){
   const drawer = $('drawer'), drawerBackdrop = $('drawerBackdrop'), drawerClose = $('drawerClose');
   const viewToggle = $('viewToggle');
   const viewSystems = $('viewSystems');
-  const viewAgenda = $('viewAgenda');
   const agendaEl = $('agenda');
+  const btnToggleAllSys = $('btnToggleAllSys');
+  const btnToggleAllOverview = $('btnToggleAllOverview');
   let selectedEpsFilter = 'all';
+
+  function autoExpandFiltered(now){
+    openCats.clear();
+    overviewOpenCats.clear();
+    DATA.categories.forEach(cat => {
+      const all = tasksByCat[cat.id] || [];
+      const hasMatch = all.some(t => matchesEps(t) && matchesFilter(t, now));
+      if (hasMatch){
+        openCats.add(cat.id);
+        overviewOpenCats.add(cat.id);
+      }
+    });
+  }
+
+  function updateToggleAllBtn(){
+    if (!btnToggleAllSys) return;
+    const visibleCats = DATA.categories.filter(cat => {
+      const all = tasksByCat[cat.id] || [];
+      return (sysCategoryFilter === 'all' || cat.id === sysCategoryFilter) &&
+             all.some(t => matchesSearch(t, cat) && matchesFilter(t, scrubTime));
+    });
+    const allOpen = visibleCats.length > 0 && visibleCats.every(c => openCats.has(c.id));
+    const txt = btnToggleAllSys.querySelector('.toggle-all-text');
+    if (txt) txt.textContent = allOpen ? 'Minimizar' : 'Desplegar';
+    btnToggleAllSys.setAttribute('aria-expanded', allOpen ? 'true' : 'false');
+    btnToggleAllSys.classList.toggle('active', allOpen);
+  }
+
+  if (btnToggleAllSys){
+    btnToggleAllSys.addEventListener('click', () => {
+      const visibleCats = DATA.categories.filter(cat => {
+        const all = tasksByCat[cat.id] || [];
+        return (sysCategoryFilter === 'all' || cat.id === sysCategoryFilter) &&
+               all.some(t => matchesSearch(t, cat) && matchesFilter(t, scrubTime));
+      });
+      const allOpen = visibleCats.length > 0 && visibleCats.every(c => openCats.has(c.id));
+      if (allOpen){
+        visibleCats.forEach(c => openCats.delete(c.id));
+      } else {
+        visibleCats.forEach(c => openCats.add(c.id));
+      }
+      renderSystems(scrubTime);
+      updateToggleAllBtn();
+    });
+  }
+
+  function updateToggleAllOverviewBtn(){
+    if (!btnToggleAllOverview) return;
+    const visibleCats = DATA.categories.filter(cat => {
+      const all = tasksByCat[cat.id] || [];
+      return all.some(t => matchesEps(t) && matchesFilter(t, scrubTime));
+    });
+    const allOpen = visibleCats.length > 0 && visibleCats.every(c => overviewOpenCats.has(c.id));
+    const txt = btnToggleAllOverview.querySelector('.toggle-all-text');
+    if (txt) txt.textContent = allOpen ? 'Minimizar' : 'Desplegar';
+    btnToggleAllOverview.setAttribute('aria-expanded', allOpen ? 'true' : 'false');
+    btnToggleAllOverview.classList.toggle('active', allOpen);
+  }
+
+  if (btnToggleAllOverview){
+    btnToggleAllOverview.addEventListener('click', () => {
+      const visibleCats = DATA.categories.filter(cat => {
+        const all = tasksByCat[cat.id] || [];
+        return all.some(t => matchesEps(t) && matchesFilter(t, scrubTime));
+      });
+      const allOpen = visibleCats.length > 0 && visibleCats.every(c => overviewOpenCats.has(c.id));
+      if (allOpen){
+        visibleCats.forEach(c => overviewOpenCats.delete(c.id));
+      } else {
+        visibleCats.forEach(c => overviewOpenCats.add(c.id));
+      }
+      renderOverview(scrubTime);
+      updateToggleAllOverviewBtn();
+    });
+  }
 
   function getUniqueEpsList(){
     const map = new Map();
@@ -298,12 +374,17 @@ window.initCronoApp = function(DATA){
       const opt = e.target.closest('.agenda-filter-option');
       if (!opt) return;
       selectedEpsFilter = opt.dataset.value;
+      if (selectedEpsFilter !== 'all'){
+        autoExpandFiltered(scrubTime);
+      }
       updateEpsLabels();
       updateChrome(scrubTime);
       filterControls.forEach(c => c.renderPanel && c.renderPanel());
       close();
       renderActiveView(scrubTime);
       if (overviewOpen) renderOverview(scrubTime);
+      updateToggleAllBtn();
+      updateToggleAllOverviewBtn();
     });
 
     renderPanel();
@@ -387,7 +468,7 @@ window.initCronoApp = function(DATA){
       anyVisible = true;
 
       const color = colorFor(idx);
-      const isOpen = openCats.has(cat.id) || !!searchQuery || activeFilter !== 'all' || selectedEpsFilter !== 'all';
+      const isOpen = openCats.has(cat.id);
       const { state: cardState, activeCount, doneCount } = categoryState(all, now);
 
       let badgeText, badgeClass;
@@ -443,6 +524,7 @@ window.initCronoApp = function(DATA){
       card.querySelector('.sys-card-head').addEventListener('click', () => {
         if (openCats.has(cat.id)) openCats.delete(cat.id); else openCats.add(cat.id);
         renderSystems(scrubTime);
+        updateToggleAllBtn();
       });
 
       const listEl = card.querySelector('.sys-tasklist');
@@ -693,7 +775,7 @@ window.initCronoApp = function(DATA){
       if (!all.length) return;
       const visible = all.filter(t => matchesEps(t) && matchesFilter(t, now));
       if (!visible.length) return;
-      const isOpen = overviewOpenCats.has(cat.id) || !!searchQuery || activeFilter !== 'all' || selectedEpsFilter !== 'all';
+      const isOpen = overviewOpenCats.has(cat.id);
       const activeCount = all.filter(t => matchesEps(t) && stateOf(t, now) === 'active').length;
       const doneCount = all.filter(t => matchesEps(t) && stateOf(t, now) === 'done').length;
       const upcomingCount = visible.length - activeCount - doneCount;
@@ -767,6 +849,7 @@ window.initCronoApp = function(DATA){
       row.querySelector('.overview-row-head').addEventListener('click', () => {
         if (overviewOpenCats.has(cat.id)) overviewOpenCats.delete(cat.id); else overviewOpenCats.add(cat.id);
         renderOverview(scrubTime);
+        updateToggleAllOverviewBtn();
       });
       overviewRows.appendChild(row);
     });
@@ -1168,11 +1251,16 @@ window.initCronoApp = function(DATA){
   }
   function applyFilter(filter){
     activeFilter = filter;
+    if (activeFilter !== 'all'){
+      autoExpandFiltered(scrubTime);
+    }
     syncFilterChipsUI();
     [...kpiStrip.children].forEach(c => c.classList.toggle('selected', c.dataset.kpi === activeFilter));
     [...overviewKpiStrip.children].forEach(c => c.classList.toggle('selected', c.dataset.kpi === activeFilter));
     renderActiveView(scrubTime);
     if (overviewOpen) renderOverview(scrubTime);
+    updateToggleAllBtn();
+    updateToggleAllOverviewBtn();
   }
   filterChips.addEventListener('click', e => {
     const btn = e.target.closest('.chip'); if (!btn) return;

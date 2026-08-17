@@ -16,7 +16,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=28" />
+<link rel="stylesheet" href="style.css?v=29" />
 </head>
 <body>
 
@@ -144,6 +144,11 @@
         </button>
         <div class="agenda-filter-panel" id="sysEpsFilterPanel" role="listbox" hidden></div>
       </div>
+
+      <button class="toggle-all-btn" id="btnToggleAllSys" type="button" title="Expandir o minimizar todo" aria-label="Expandir o minimizar todo">
+        <svg viewBox="0 0 24 24" width="13" height="13"><path d="M7 15l5 5 5-5M7 9l5-5 5 5" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span class="toggle-all-text">Desplegar</span>
+      </button>
     </div>
     <div class="sys-ruler" id="sysRuler"></div>
     <div class="sys-list" id="sysList"></div>
@@ -275,6 +280,11 @@
         </button>
         <div class="agenda-filter-panel" id="overviewEpsFilterPanel" role="listbox" hidden></div>
       </div>
+
+      <button class="toggle-all-btn" id="btnToggleAllOverview" type="button" title="Expandir o minimizar todo" aria-label="Expandir o minimizar todo">
+        <svg viewBox="0 0 24 24" width="13" height="13"><path d="M7 15l5 5 5-5M7 9l5-5 5 5" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span class="toggle-all-text">Desplegar</span>
+      </button>
     </div>
 
     <section class="kpis overview-kpis" id="overviewKpiStrip">
@@ -332,7 +342,7 @@
 <script src="data.js"></script>
 <script src="data-sf2-electrico.js"></script>
 <script src="data-sf2-instrumentacion.js"></script>
-<script src="app.js?v=17"></script>
+<script src="app.js?v=18"></script>
 <script src="cronogramas.js"></script>
 <script src="main.js?v=2"></script>
 </body>
