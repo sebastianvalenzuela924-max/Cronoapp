@@ -794,7 +794,22 @@ window.initCronoApp = function(DATA){
   const heatmapPanel = $('heatmapPanel');
   const heatmapClose = $('heatmapClose');
   const heatmapGrid = $('heatmapGrid');
+  const heatmapTabs = $('heatmapTabs');
+  const tabContentMatrix = $('tabContentMatrix');
+  const tabContentOverview = $('tabContentOverview');
+  const hmDrilldownBadge = $('hmDrilldownBadge');
+  const hmDrilldownSub = $('hmDrilldownSub');
+  const hmDrilldownClear = $('hmDrilldownClear');
+  const hmDrilldownList = $('hmDrilldownList');
+  const heatmapEpsRows = $('heatmapEpsRows');
+
   let heatmapOpen = false;
+  let heatmapTab = 'matrix'; // 'matrix' | 'overview'
+  let selectedDrilldown = null; // { epsName, slotIdx, slot, tasks }
+  const heatmapOpenEps = new Set();
+
+  const catById = {};
+  DATA.categories.forEach(c => catById[c.id] = c);
 
   function buildHeatmapSlots(){
     const durationHours = WINDOW_MS / 3600000;
@@ -818,6 +833,177 @@ window.initCronoApp = function(DATA){
       cur = next;
     }
     return slots;
+  }
+
+  function renderHeatmapDrilldown(now, epsMetrics, slots){
+    if (!hmDrilldownList) return;
+    hmDrilldownList.innerHTML = '';
+
+    let tasksToShow = [];
+    let titleText = '';
+    let subText = '';
+
+    if (selectedDrilldown){
+      const { epsName, slotIdx, slot, tasks } = selectedDrilldown;
+      tasksToShow = tasks;
+      titleText = `🏢 ${epsName} · ${slot.labelDay} ${slot.labelDate} a las ${slot.labelTime}`;
+      subText = `${tasks.length} tarea${tasks.length === 1 ? '' : 's'} simultánea${tasks.length === 1 ? '' : 's'} en esta franja horaria`;
+      if (hmDrilldownClear) hmDrilldownClear.hidden = false;
+    } else {
+      // Show active or upcoming tasks in the current time
+      const activeTasks = DATA.tasks.filter(t => stateOf(t, now) === 'active');
+      tasksToShow = activeTasks.length ? activeTasks : DATA.tasks.filter(t => matchesFilter(t, now)).slice(0, 10);
+      titleText = activeTasks.length ? `⚡ Tareas en Faena Ahora (${activeTasks.length})` : `📋 Próximas Tareas`;
+      subText = `Toca una celda en la matriz para aislar sus tareas simultáneas`;
+      if (hmDrilldownClear) hmDrilldownClear.hidden = true;
+    }
+
+    if (hmDrilldownBadge) hmDrilldownBadge.textContent = titleText;
+    if (hmDrilldownSub) hmDrilldownSub.textContent = subText;
+
+    if (!tasksToShow.length){
+      const empty = document.createElement('div');
+      empty.className = 'hm-drilldown-empty';
+      empty.textContent = 'No hay tareas asignadas en esta franja horaria.';
+      hmDrilldownList.appendChild(empty);
+      return;
+    }
+
+    tasksToShow.slice().sort((a,b) => a._start - b._start).forEach(t => {
+      const s = stateOf(t, now);
+      const dotColor = s === 'active' ? 'var(--warning)' : s === 'upcoming' ? 'var(--upcoming)' : 'var(--success)';
+      const tagText = s === 'active' ? 'En curso' : s === 'upcoming' ? 'Próximo' : '✓ Listo';
+      const countdown = countdownInfo(t, now);
+      const cat = catById[t.category];
+      const epsName = (t.eps || '').trim() || 'Interno / Planta';
+
+      const taskRow = document.createElement('div');
+      taskRow.className = 'overview-task state-' + s;
+      taskRow.innerHTML = `
+        <span class="dot" style="background:${dotColor}"></span>
+        <div class="hm-task-content">
+          <span class="name">${t.name}</span>
+          <div class="hm-task-badges">
+            ${t.om ? `<span class="hm-badge om">OM ${t.om}</span>` : ''}
+            ${cat ? `<span class="hm-badge cat">${cat.icon} ${cat.label}</span>` : ''}
+            <span class="hm-badge eps">👷 ${epsName}</span>
+          </div>
+        </div>
+        <span class="chip ${s}">${tagText}</span>
+        <div class="meta">
+          <span class="window">${fmtTaskWindow(t)}</span>
+          ${countdown ? `<span class="countdown ${countdown.kind}">⏱ ${countdown.text}</span>` : ''}
+        </div>
+      `;
+      taskRow.addEventListener('click', (e) => {
+        e.stopPropagation();
+        openDrawer(t, scrubTime);
+      });
+      hmDrilldownList.appendChild(taskRow);
+    });
+  }
+
+  function renderHeatmapEpsOverview(now, epsMetrics){
+    if (!heatmapEpsRows) return;
+    heatmapEpsRows.innerHTML = '';
+
+    epsMetrics.forEach(eps => {
+      const all = eps.tasks;
+      if (!all.length) return;
+      const isOpen = heatmapOpenEps.has(eps.name);
+      const activeCount = all.filter(t => stateOf(t, now) === 'active').length;
+      const doneCount = all.filter(t => stateOf(t, now) === 'done').length;
+      const upcomingCount = all.length - activeCount - doneCount;
+      const cardState = activeCount > 0 ? 'active' : (doneCount === all.length ? 'done' : 'upcoming');
+
+      const row = document.createElement('div');
+      row.className = 'overview-row card-' + cardState + (isOpen ? ' open' : '');
+      row.innerHTML = `
+        <div class="overview-row-head">
+          <div class="overview-row-label">
+            <span class="icon">${eps.name === 'Interno / Planta' ? '⚡' : '🏢'}</span>
+            <div class="label-text">
+              <span class="name">${eps.name}</span>
+              <span class="stats"><b class="s-active">${activeCount}</b>/<b class="s-done">${doneCount}</b>/<b class="s-upcoming">${upcomingCount}</b> · <span class="peak-stat">Pico: ${eps.maxConcurrent} simultáneas</span></span>
+            </div>
+          </div>
+          <div class="overview-bar-wrap"></div>
+          <svg class="overview-chev" viewBox="0 0 24 24" width="14" height="14"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="overview-tasklist"></div>
+      `;
+
+      const barEl = row.querySelector('.overview-bar-wrap');
+      DAY_SEGMENTS.slice(1).forEach(seg => {
+        const div = document.createElement('div');
+        div.className = 'overview-daydiv';
+        div.style.left = pct(seg.start) + '%';
+        barEl.appendChild(div);
+      });
+
+      all.forEach((t, tIdx) => {
+        const s = stateOf(t, now);
+        const left = pct(t._start);
+        const width = Math.max(1, pct(t._end) - left);
+        const seg = document.createElement('div');
+        seg.className = 'overview-seg state-' + s;
+        seg.style.left = left + '%';
+        seg.style.width = width + '%';
+        seg.title = t.name;
+        seg.addEventListener('click', (e) => { e.stopPropagation(); openDrawer(t, scrubTime); });
+        barEl.appendChild(seg);
+      });
+
+      const nowLine = document.createElement('div');
+      nowLine.className = 'overview-now-line';
+      nowLine.style.left = pct(now) + '%';
+      barEl.appendChild(nowLine);
+
+      if (isOpen){
+        const listEl = row.querySelector('.overview-tasklist');
+        all.slice().sort((a, b) => a._start - b._start).forEach(t => {
+          const s = stateOf(t, now);
+          const dotColor = s === 'active' ? 'var(--warning)' : s === 'upcoming' ? 'var(--upcoming)' : 'var(--success)';
+          const tagText = s === 'active' ? 'En curso' : s === 'upcoming' ? 'Próximo' : '✓ Listo';
+          const countdown = countdownInfo(t, now);
+          const cat = catById[t.category];
+
+          const taskRow = document.createElement('div');
+          taskRow.className = 'overview-task state-' + s;
+          taskRow.innerHTML = `
+            <span class="dot" style="background:${dotColor}"></span>
+            <div class="hm-task-content">
+              <span class="name">${t.name}</span>
+              <div class="hm-task-badges">
+                ${t.om ? `<span class="hm-badge om">OM ${t.om}</span>` : ''}
+                ${cat ? `<span class="hm-badge cat">${cat.icon} ${cat.label}</span>` : ''}
+              </div>
+            </div>
+            <span class="chip ${s}">${tagText}</span>
+            <div class="meta">
+              <span class="window">${fmtTaskWindow(t)}</span>
+              ${countdown ? `<span class="countdown ${countdown.kind}">⏱ ${countdown.text}</span>` : ''}
+            </div>
+          `;
+          taskRow.addEventListener('click', (e) => { e.stopPropagation(); openDrawer(t, scrubTime); });
+          listEl.appendChild(taskRow);
+        });
+      }
+
+      row.querySelector('.overview-row-head').addEventListener('click', () => {
+        if (heatmapOpenEps.has(eps.name)) heatmapOpenEps.delete(eps.name); else heatmapOpenEps.add(eps.name);
+        renderHeatmap(scrubTime);
+      });
+
+      heatmapEpsRows.appendChild(row);
+    });
+
+    if (!heatmapEpsRows.children.length){
+      const empty = document.createElement('div');
+      empty.className = 'overview-empty';
+      empty.textContent = 'Sin empresas registradas.';
+      heatmapEpsRows.appendChild(empty);
+    }
   }
 
   function renderHeatmap(now){
@@ -878,22 +1064,24 @@ window.initCronoApp = function(DATA){
           </tr>
         </thead>
         <tbody>
-          ${epsMetrics.map(eps => {
+          ${epsMetrics.map((eps, epsIdx) => {
             const isFiltered = selectedEpsFilter === eps.name;
+            const isDrillSelected = selectedDrilldown && selectedDrilldown.epsName === eps.name;
             return `
-              <tr class="heatmap-row ${isFiltered ? 'is-selected' : ''}" data-eps="${eps.name}">
-                <td class="td-eps-name" title="Toca para filtrar ${eps.name}">
+              <tr class="heatmap-row ${isFiltered || isDrillSelected ? 'is-selected' : ''}" data-eps="${eps.name}">
+                <td class="td-eps-name" title="Toca para ver tareas de ${eps.name}">
                   <div class="eps-row-main">
                     <span class="eps-name-badge">${eps.name}</span>
                     <span class="eps-count-pill">${eps.count} tareas</span>
                     ${eps.isWorkingNow ? '<span class="eps-live-badge">⚡ Activo</span>' : ''}
                   </div>
-                  <div class="eps-row-sub">Pico máx: <b>${eps.maxConcurrent} simultáneas</b></div>
+                  <div class="eps-row-sub">Pico: <b>${eps.maxConcurrent} simultáneas</b></div>
                 </td>
                 ${eps.slotCounts.map((slotData, sIdx) => {
                   const count = slotData.count;
                   const slot = slots[sIdx];
                   const isLiveSlot = now >= slot.start && now < slot.end;
+                  const isCellSelected = selectedDrilldown && selectedDrilldown.epsName === eps.name && selectedDrilldown.slotIdx === sIdx;
                   let levelClass = 'lvl-0';
                   if (count === 1) levelClass = 'lvl-1';
                   else if (count === 2) levelClass = 'lvl-2';
@@ -901,10 +1089,10 @@ window.initCronoApp = function(DATA){
                   else if (count >= 4) levelClass = 'lvl-peak';
 
                   return `
-                    <td class="td-cell ${levelClass} ${isLiveSlot ? 'cell-live' : ''}" 
+                    <td class="td-cell ${levelClass} ${isLiveSlot ? 'cell-live' : ''} ${isCellSelected ? 'cell-selected' : ''}" 
                         data-eps="${eps.name}" 
                         data-slot="${sIdx}" 
-                        title="${eps.name} (${slot.labelDay} ${slot.labelTime}): ${count} tareas simultáneas">
+                        title="${eps.name} (${slot.labelDay} ${slot.labelTime}): ${count} tareas simultáneas. Toca para ver el detalle.">
                       <div class="cell-content">
                         ${count > 0 ? `<span class="cell-num">${count}${count>=4 ? ' 🔥' : ''}</span>` : '<span class="cell-dot">·</span>'}
                       </div>
@@ -920,17 +1108,29 @@ window.initCronoApp = function(DATA){
 
     heatmapGrid.innerHTML = html;
 
+    // Attach click listeners to EPS names
     heatmapGrid.querySelectorAll('.td-eps-name').forEach(el => {
       el.addEventListener('click', () => {
         const row = el.closest('.heatmap-row');
         const epsName = row.dataset.eps;
-        selectedEpsFilter = (selectedEpsFilter === epsName) ? 'all' : epsName;
-        updateEpsLabels();
+        const eps = epsMetrics.find(e => e.name === epsName);
+        if (!eps) return;
+
+        selectedDrilldown = {
+          epsName,
+          slotIdx: -1,
+          slot: { labelDay: 'Todas las franjas', labelDate: '', labelTime: '' },
+          tasks: eps.tasks
+        };
         renderHeatmap(scrubTime);
-        renderActiveView(scrubTime);
+
+        // Smooth scroll to drilldown section
+        const drill = $('heatmapDrilldown');
+        if (drill) drill.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       });
     });
 
+    // Attach click listeners to cells
     heatmapGrid.querySelectorAll('.td-cell').forEach(cell => {
       cell.addEventListener('click', () => {
         const epsName = cell.dataset.eps;
@@ -941,16 +1141,42 @@ window.initCronoApp = function(DATA){
         const tasksInSlot = eps.slotCounts[slotIdx].tasks;
         if (!tasksInSlot || !tasksInSlot.length) return;
 
-        if (tasksInSlot.length === 1){
-          openDrawer(tasksInSlot[0], scrubTime);
-        } else {
-          selectedEpsFilter = epsName;
-          updateEpsLabels();
-          closeHeatmap();
-          scrubTime = slot.start;
-          renderActiveView(scrubTime);
-        }
+        selectedDrilldown = {
+          epsName,
+          slotIdx,
+          slot,
+          tasks: tasksInSlot
+        };
+        renderHeatmap(scrubTime);
+
+        // Smooth scroll to drilldown section
+        const drill = $('heatmapDrilldown');
+        if (drill) drill.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       });
+    });
+
+    renderHeatmapDrilldown(now, epsMetrics, slots);
+    renderHeatmapEpsOverview(now, epsMetrics);
+  }
+
+  // Clear drilldown button
+  if (hmDrilldownClear){
+    hmDrilldownClear.addEventListener('click', () => {
+      selectedDrilldown = null;
+      renderHeatmap(scrubTime);
+    });
+  }
+
+  // Tabs switching
+  if (heatmapTabs){
+    heatmapTabs.addEventListener('click', (e) => {
+      const btn = e.target.closest('.hm-tab');
+      if (!btn) return;
+      heatmapTab = btn.dataset.tab;
+      [...heatmapTabs.children].forEach(b => b.classList.toggle('active', b === btn));
+      if (tabContentMatrix) tabContentMatrix.hidden = (heatmapTab !== 'matrix');
+      if (tabContentOverview) tabContentOverview.hidden = (heatmapTab !== 'overview');
+      renderHeatmap(scrubTime);
     });
   }
 

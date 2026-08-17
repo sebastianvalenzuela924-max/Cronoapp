@@ -16,7 +16,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=20" />
+<link rel="stylesheet" href="style.css?v=21" />
 </head>
 <body>
 
@@ -294,10 +294,24 @@
   <div class="heatmap-panel" id="heatmapPanel">
     <div class="heatmap-hdr">
       <div>
-        <h2>📊 Matriz de Carga de Cuadrillas</h2>
-        <span class="heatmap-sub">Saturación horaria e intervenciones por empresa contratista (EPS)</span>
+        <h2>📊 Carga de Cuadrillas y Contratistas (EPS)</h2>
+        <span class="heatmap-sub">Saturación horaria, tareas simultáneas y cuellos de botella</span>
       </div>
       <button class="heatmap-close" id="heatmapClose" aria-label="Cerrar matriz">✕</button>
+    </div>
+
+    <!-- Heatmap Tabs -->
+    <div class="heatmap-tabs-bar">
+      <div class="heatmap-tabs" id="heatmapTabs">
+        <button class="hm-tab active" data-tab="matrix">
+          <svg viewBox="0 0 24 24" width="14" height="14"><rect x="3" y="3" width="7" height="7" rx="1.5" fill="currentColor"/><rect x="14" y="3" width="7" height="7" rx="1.5" fill="currentColor"/><rect x="3" y="14" width="7" height="7" rx="1.5" fill="currentColor"/><rect x="14" y="14" width="7" height="7" rx="1.5" fill="currentColor"/></svg>
+          <span>Matriz Horaria</span>
+        </button>
+        <button class="hm-tab" data-tab="overview">
+          <svg viewBox="0 0 24 24" width="14" height="14"><path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+          <span>Vista por Empresa</span>
+        </button>
+      </div>
     </div>
 
     <!-- Heatmap KPI Strip -->
@@ -320,21 +334,43 @@
       </div>
     </div>
 
-    <!-- Heatmap Legend -->
-    <div class="heatmap-legend">
-      <div class="hl-items">
-        <div class="hl-item"><span class="hl-dot lvl-0"></span> 0</div>
-        <div class="hl-item"><span class="hl-dot lvl-1"></span> 1 tarea</div>
-        <div class="hl-item"><span class="hl-dot lvl-2"></span> 2 tareas</div>
-        <div class="hl-item"><span class="hl-dot lvl-3"></span> 3 tareas</div>
-        <div class="hl-item"><span class="hl-dot lvl-peak"></span> 4+ tareas (Pico)</div>
-      </div>
-      <span class="hl-hint">💡 Toca cualquier empresa o celda para filtrar sus tareas</span>
-    </div>
+    <div class="heatmap-body-scroll">
+      <!-- TAB 1: Matriz Horaria Heatmap + Panel de Desglose Simultáneo -->
+      <div class="heatmap-tab-content" id="tabContentMatrix">
+        <!-- Heatmap Legend -->
+        <div class="heatmap-legend">
+          <div class="hl-items">
+            <div class="hl-item"><span class="hl-dot lvl-0"></span> 0</div>
+            <div class="hl-item"><span class="hl-dot lvl-1"></span> 1 tarea</div>
+            <div class="hl-item"><span class="hl-dot lvl-2"></span> 2 tareas</div>
+            <div class="hl-item"><span class="hl-dot lvl-3"></span> 3 tareas</div>
+            <div class="hl-item"><span class="hl-dot lvl-peak"></span> 4+ (Pico)</div>
+          </div>
+          <span class="hl-hint">💡 Toca cualquier celda o empresa para ver sus tareas simultáneas</span>
+        </div>
 
-    <!-- Heatmap Table Scroll -->
-    <div class="heatmap-grid-scroll">
-      <div class="heatmap-grid-inner" id="heatmapGrid"></div>
+        <!-- Heatmap Table Scroll -->
+        <div class="heatmap-grid-scroll">
+          <div class="heatmap-grid-inner" id="heatmapGrid"></div>
+        </div>
+
+        <!-- Panel de Desglose de Tareas Simultáneas (en la misma vista) -->
+        <div class="heatmap-drilldown" id="heatmapDrilldown">
+          <div class="hm-drilldown-hdr">
+            <div class="hm-drilldown-title">
+              <span class="hm-drilldown-badge" id="hmDrilldownBadge">📋 Tareas Simultáneas</span>
+              <span class="hm-drilldown-sub" id="hmDrilldownSub">Selecciona una celda en la matriz para ver el desglose</span>
+            </div>
+            <button class="hm-drilldown-clear" id="hmDrilldownClear" type="button" hidden>✕ Ver todas</button>
+          </div>
+          <div class="hm-drilldown-list" id="hmDrilldownList"></div>
+        </div>
+      </div>
+
+      <!-- TAB 2: Vista Desglosada por Empresa (Panorama General EPS) -->
+      <div class="heatmap-tab-content" id="tabContentOverview" hidden>
+        <div class="heatmap-eps-rows" id="heatmapEpsRows"></div>
+      </div>
     </div>
   </div>
 
@@ -362,7 +398,7 @@
 <script src="data.js"></script>
 <script src="data-sf2-electrico.js"></script>
 <script src="data-sf2-instrumentacion.js"></script>
-<script src="app.js?v=12"></script>
+<script src="app.js?v=13"></script>
 <script src="cronogramas.js"></script>
 <script src="main.js?v=2"></script>
 </body>
