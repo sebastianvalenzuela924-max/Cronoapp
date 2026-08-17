@@ -715,6 +715,12 @@ body{
   flex:none; width:100%; padding-left:15px;
   font-size:10.5px; font-weight:700; color: var(--text-faint);
 }
+.overview-task .meta .countdown{
+  display:inline-block; margin-left:8px; font-size:10px; font-weight:800;
+  padding:2px 7px; border-radius:6px; letter-spacing:.1px; vertical-align:1px;
+}
+.overview-task .meta .countdown.active{ background: var(--warning-soft); color: var(--warning); }
+.overview-task .meta .countdown.upcoming{ background: var(--upcoming-soft); color: var(--upcoming); }
 .overview-task .chip{ flex:none; font-size:9.5px; font-weight:800; padding:2px 7px; border-radius:999px; }
 .overview-task .chip.active{ background: var(--warning-soft); color: var(--warning); }
 .overview-task .chip.upcoming{ background: var(--upcoming-soft); color: var(--upcoming); }

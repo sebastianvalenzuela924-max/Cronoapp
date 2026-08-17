@@ -641,13 +641,14 @@ window.initCronoApp = function(DATA){
           const s = stateOf(t, now);
           const dotColor = s === 'active' ? 'var(--warning)' : s === 'upcoming' ? 'var(--upcoming)' : 'var(--success)';
           const tagText = s === 'active' ? 'En curso' : s === 'upcoming' ? 'Próximo' : '✓ Listo';
+          const countdown = countdownInfo(t, now);
           const taskRow = document.createElement('div');
           taskRow.className = 'overview-task state-' + s;
           taskRow.innerHTML = `
             <span class="dot" style="background:${dotColor}"></span>
             <span class="name">${t.name}</span>
             <span class="chip ${s}">${tagText}</span>
-            <span class="meta">${fmtTaskWindow(t)}</span>
+            <span class="meta">${fmtTaskWindow(t)}${countdown ? `<span class="countdown ${countdown.kind}">⏱ ${countdown.text}</span>` : ''}</span>
           `;
           taskRow.addEventListener('click', (e) => { e.stopPropagation(); openDrawer(t, scrubTime); });
           listEl.appendChild(taskRow);
