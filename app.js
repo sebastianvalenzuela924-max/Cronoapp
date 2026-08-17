@@ -158,6 +158,38 @@ window.initCronoApp = function(DATA){
   const viewSystems = $('viewSystems');
   const viewAgenda = $('viewAgenda');
   const agendaEl = $('agenda');
+  let selectedEpsFilter = 'all';
+
+  function getUniqueEpsList(){
+    const map = new Map();
+    DATA.tasks.forEach(t => {
+      const raw = (t.eps || '').trim();
+      const name = raw ? raw : 'Interno / Planta';
+      if (!map.has(name)){
+        map.set(name, { name, raw, count: 0, tasks: [] });
+      }
+      const item = map.get(name);
+      item.count++;
+      item.tasks.push(t);
+    });
+    return Array.from(map.values()).sort((a, b) => b.count - a.count);
+  }
+
+  function matchesEps(t){
+    if (selectedEpsFilter === 'all') return true;
+    const raw = (t.eps || '').trim();
+    const name = raw ? raw : 'Interno / Planta';
+    return name === selectedEpsFilter;
+  }
+
+  function updateEpsLabels(){
+    const labelText = selectedEpsFilter === 'all' ? 'Todas las EPS' : `👷 ${selectedEpsFilter}`;
+    if ($('sysEpsFilterLabel')) $('sysEpsFilterLabel').textContent = labelText;
+    if ($('agendaEpsFilterLabel')) $('agendaEpsFilterLabel').textContent = labelText;
+    if ($('sysEpsFilterBtn')) $('sysEpsFilterBtn').classList.toggle('filtered', selectedEpsFilter !== 'all');
+    if ($('agendaEpsFilterBtn')) $('agendaEpsFilterBtn').classList.toggle('filtered', selectedEpsFilter !== 'all');
+  }
+
   // Filtro de sistema (dropdown propio, en vez de <select> nativo, para
   // combinar con la estética de la app). Se usa tanto en Agenda como en
   // Sistemas, cada uno con su propio botón/panel pero la misma lógica.
@@ -213,10 +245,77 @@ window.initCronoApp = function(DATA){
     filterControls.push(control);
     return control;
   }
+
+  function setupEpsFilter(btn, label, panel){
+    if (!btn || !label || !panel) return null;
+    function renderPanel(){
+      panel.innerHTML = '';
+      const epsList = getUniqueEpsList();
+      const isAll = selectedEpsFilter === 'all';
+      
+      const allOpt = document.createElement('div');
+      allOpt.className = 'agenda-filter-option' + (isAll ? ' selected' : '');
+      allOpt.setAttribute('role', 'option');
+      allOpt.dataset.value = 'all';
+      allOpt.innerHTML = `<span class="opt-icon">👷</span><span class="opt-label">Todas las empresas (EPS)</span><span class="opt-count">${DATA.tasks.length}</span>`;
+      panel.appendChild(allOpt);
+
+      epsList.forEach(eps => {
+        const isSelected = selectedEpsFilter === eps.name;
+        const opt = document.createElement('div');
+        opt.className = 'agenda-filter-option' + (isSelected ? ' selected' : '');
+        opt.setAttribute('role', 'option');
+        opt.dataset.value = eps.name;
+        const icon = eps.name === 'Interno / Planta' ? '⚡' : '🏢';
+        const activeCount = eps.tasks.filter(t => stateOf(t, scrubTime) === 'active').length;
+        const countText = activeCount > 0 ? `${eps.count} (${activeCount} en curso)` : `${eps.count}`;
+        opt.innerHTML = `<span class="opt-icon">${icon}</span><span class="opt-label">${eps.name}</span><span class="opt-count">${countText}</span>`;
+        panel.appendChild(opt);
+      });
+    }
+
+    function close(){
+      panel.hidden = true;
+      btn.classList.remove('open');
+      btn.setAttribute('aria-expanded', 'false');
+    }
+    function open(){
+      filterControls.forEach(c => { if (c.close !== close) c.close(); });
+      renderPanel();
+      panel.hidden = false;
+      btn.classList.add('open');
+      btn.setAttribute('aria-expanded', 'true');
+    }
+
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (panel.hidden) open(); else close();
+    });
+
+    panel.addEventListener('click', (e) => {
+      const opt = e.target.closest('.agenda-filter-option');
+      if (!opt) return;
+      selectedEpsFilter = opt.dataset.value;
+      updateEpsLabels();
+      filterControls.forEach(c => c.renderPanel && c.renderPanel());
+      close();
+      renderActiveView(scrubTime);
+      if (overviewOpen) renderOverview(scrubTime);
+    });
+
+    renderPanel();
+    const control = { renderPanel, close };
+    filterControls.push(control);
+    return control;
+  }
+
   setupCategoryFilter($('agendaFilterBtn'), $('agendaFilterLabel'), $('agendaFilterPanel'),
     () => agendaCategoryFilter, (v) => { agendaCategoryFilter = v; });
   setupCategoryFilter($('sysFilterBtn'), $('sysFilterLabel'), $('sysFilterPanel'),
     () => sysCategoryFilter, (v) => { sysCategoryFilter = v; });
+  setupEpsFilter($('sysEpsFilterBtn'), $('sysEpsFilterLabel'), $('sysEpsFilterPanel'));
+  setupEpsFilter($('agendaEpsFilterBtn'), $('agendaEpsFilterLabel'), $('agendaEpsFilterPanel'));
+
   document.addEventListener('click', (e) => {
     if (!e.target.closest('.agenda-filter-wrap')) filterControls.forEach(c => c.close());
   });
@@ -253,6 +352,7 @@ window.initCronoApp = function(DATA){
   buildSysRuler();
 
   function matchesSearch(t, cat){
+    if (!matchesEps(t)) return false;
     if (!searchQuery) return true;
     const q = searchQuery.toLowerCase();
     return t.name.toLowerCase().includes(q) || (t.om||'').toLowerCase().includes(q) ||
@@ -587,12 +687,12 @@ window.initCronoApp = function(DATA){
     DATA.categories.forEach((cat, idx) => {
       const all = tasksByCat[cat.id] || [];
       if (!all.length) return;
-      const visible = all.filter(t => matchesFilter(t, now));
+      const visible = all.filter(t => matchesEps(t) && matchesFilter(t, now));
       if (!visible.length) return;
       const isOpen = overviewOpenCats.has(cat.id) || activeFilter !== 'all';
-      const activeCount = all.filter(t => stateOf(t, now) === 'active').length;
-      const doneCount = all.filter(t => stateOf(t, now) === 'done').length;
-      const upcomingCount = all.length - activeCount - doneCount;
+      const activeCount = all.filter(t => matchesEps(t) && stateOf(t, now) === 'active').length;
+      const doneCount = all.filter(t => matchesEps(t) && stateOf(t, now) === 'done').length;
+      const upcomingCount = visible.length - activeCount - doneCount;
       const { state: rowState } = categoryState(all, now);
 
       const row = document.createElement('div');
@@ -619,7 +719,7 @@ window.initCronoApp = function(DATA){
         barEl.appendChild(div);
       });
       all.forEach((t, tIdx) => {
-        if (!matchesFilter(t, now)) return;
+        if (!matchesEps(t) || !matchesFilter(t, now)) return;
         const s = stateOf(t, now);
         const left = pct(t._start);
         const width = Math.max(1, pct(t._end) - left);
@@ -639,7 +739,7 @@ window.initCronoApp = function(DATA){
       if (isOpen){
         const listEl = row.querySelector('.overview-tasklist');
         all.slice().sort((a, b) => a._start - b._start).forEach((t, tIdx) => {
-          if (!matchesFilter(t, now)) return;
+          if (!matchesEps(t) || !matchesFilter(t, now)) return;
           const s = stateOf(t, now);
           const dotColor = s === 'active' ? 'var(--warning)' : s === 'upcoming' ? 'var(--upcoming)' : 'var(--success)';
           const tagText = s === 'active' ? 'En curso' : s === 'upcoming' ? 'Próximo' : '✓ Listo';
@@ -689,6 +789,189 @@ window.initCronoApp = function(DATA){
   }
   btnOverview.addEventListener('click', openOverview);
   overviewClose.addEventListener('click', closeOverview);
+
+  // ===== MATRIZ DE CARGA DE CUADRILLAS (HEATMAP EPS) =====
+  const heatmapPanel = $('heatmapPanel');
+  const heatmapClose = $('heatmapClose');
+  const heatmapGrid = $('heatmapGrid');
+  let heatmapOpen = false;
+
+  function buildHeatmapSlots(){
+    const durationHours = WINDOW_MS / 3600000;
+    const slotHours = durationHours <= 30 ? 2 : durationHours <= 70 ? 3 : 4;
+    const slotMs = slotHours * 3600000;
+    const slots = [];
+    let cur = new Date(WINDOW_START);
+    cur.setMinutes(0,0,0);
+    while (cur < WINDOW_END){
+      const next = new Date(cur.getTime() + slotMs);
+      const start = cur < WINDOW_START ? WINDOW_START : cur;
+      const end = next > WINDOW_END ? WINDOW_END : next;
+      slots.push({
+        labelDay: DAY_NAMES[cur.getDay()],
+        labelDate: cur.getDate(),
+        labelTime: fmtTime(cur),
+        start,
+        end,
+        slotHours
+      });
+      cur = next;
+    }
+    return slots;
+  }
+
+  function renderHeatmap(now){
+    if (!heatmapGrid) return;
+    const epsList = getUniqueEpsList();
+    const slots = buildHeatmapSlots();
+
+    let peakSimultaneous = 0;
+    let bottleneckEps = '—';
+    let bottleneckPeak = 0;
+    let activeCuadrillasNow = 0;
+
+    const epsMetrics = epsList.map(eps => {
+      let maxConcurrent = 0;
+      const slotCounts = slots.map(slot => {
+        const overlapping = eps.tasks.filter(t => t._start < slot.end && t._end > slot.start);
+        if (overlapping.length > maxConcurrent) maxConcurrent = overlapping.length;
+        if (overlapping.length > peakSimultaneous) peakSimultaneous = overlapping.length;
+        return { count: overlapping.length, tasks: overlapping };
+      });
+
+      const currentActive = eps.tasks.filter(t => stateOf(t, now) === 'active');
+      const isWorkingNow = currentActive.length > 0;
+      if (isWorkingNow) activeCuadrillasNow++;
+
+      if (maxConcurrent > bottleneckPeak){
+        bottleneckPeak = maxConcurrent;
+        bottleneckEps = eps.name + ` (${maxConcurrent} simultáneas)`;
+      }
+
+      return {
+        ...eps,
+        maxConcurrent,
+        isWorkingNow,
+        currentActiveCount: currentActive.length,
+        slotCounts
+      };
+    });
+
+    if ($('hkTotalEps')) $('hkTotalEps').textContent = epsList.length;
+    if ($('hkActiveNow')) $('hkActiveNow').textContent = activeCuadrillasNow;
+    if ($('hkPeakLoad')) $('hkPeakLoad').textContent = peakSimultaneous + ' tareas';
+    if ($('hkBottleneckName')) $('hkBottleneckName').textContent = bottleneckEps;
+
+    let html = `
+      <table class="heatmap-table">
+        <thead>
+          <tr>
+            <th class="th-eps-header">Empresa Contratista (EPS)</th>
+            ${slots.map(slot => {
+              const isLiveSlot = now >= slot.start && now < slot.end;
+              return `<th class="th-time-slot ${isLiveSlot ? 'is-live' : ''}">
+                <span class="slot-day">${slot.labelDay} ${slot.labelDate}</span>
+                <span class="slot-time">${slot.labelTime}</span>
+                ${isLiveSlot ? '<span class="slot-live-pill">AHORA</span>' : ''}
+              </th>`;
+            }).join('')}
+          </tr>
+        </thead>
+        <tbody>
+          ${epsMetrics.map(eps => {
+            const isFiltered = selectedEpsFilter === eps.name;
+            return `
+              <tr class="heatmap-row ${isFiltered ? 'is-selected' : ''}" data-eps="${eps.name}">
+                <td class="td-eps-name" title="Toca para filtrar ${eps.name}">
+                  <div class="eps-row-main">
+                    <span class="eps-name-badge">${eps.name}</span>
+                    <span class="eps-count-pill">${eps.count} tareas</span>
+                    ${eps.isWorkingNow ? '<span class="eps-live-badge">⚡ Activo</span>' : ''}
+                  </div>
+                  <div class="eps-row-sub">Pico máx: <b>${eps.maxConcurrent} simultáneas</b></div>
+                </td>
+                ${eps.slotCounts.map((slotData, sIdx) => {
+                  const count = slotData.count;
+                  const slot = slots[sIdx];
+                  const isLiveSlot = now >= slot.start && now < slot.end;
+                  let levelClass = 'lvl-0';
+                  if (count === 1) levelClass = 'lvl-1';
+                  else if (count === 2) levelClass = 'lvl-2';
+                  else if (count === 3) levelClass = 'lvl-3';
+                  else if (count >= 4) levelClass = 'lvl-peak';
+
+                  return `
+                    <td class="td-cell ${levelClass} ${isLiveSlot ? 'cell-live' : ''}" 
+                        data-eps="${eps.name}" 
+                        data-slot="${sIdx}" 
+                        title="${eps.name} (${slot.labelDay} ${slot.labelTime}): ${count} tareas simultáneas">
+                      <div class="cell-content">
+                        ${count > 0 ? `<span class="cell-num">${count}${count>=4 ? ' 🔥' : ''}</span>` : '<span class="cell-dot">·</span>'}
+                      </div>
+                    </td>
+                  `;
+                }).join('')}
+              </tr>
+            `;
+          }).join('')}
+        </tbody>
+      </table>
+    `;
+
+    heatmapGrid.innerHTML = html;
+
+    heatmapGrid.querySelectorAll('.td-eps-name').forEach(el => {
+      el.addEventListener('click', () => {
+        const row = el.closest('.heatmap-row');
+        const epsName = row.dataset.eps;
+        selectedEpsFilter = (selectedEpsFilter === epsName) ? 'all' : epsName;
+        updateEpsLabels();
+        renderHeatmap(scrubTime);
+        renderActiveView(scrubTime);
+      });
+    });
+
+    heatmapGrid.querySelectorAll('.td-cell').forEach(cell => {
+      cell.addEventListener('click', () => {
+        const epsName = cell.dataset.eps;
+        const slotIdx = parseInt(cell.dataset.slot, 10);
+        const slot = slots[slotIdx];
+        const eps = epsMetrics.find(e => e.name === epsName);
+        if (!eps) return;
+        const tasksInSlot = eps.slotCounts[slotIdx].tasks;
+        if (!tasksInSlot || !tasksInSlot.length) return;
+
+        if (tasksInSlot.length === 1){
+          openDrawer(tasksInSlot[0], scrubTime);
+        } else {
+          selectedEpsFilter = epsName;
+          updateEpsLabels();
+          closeHeatmap();
+          scrubTime = slot.start;
+          renderActiveView(scrubTime);
+        }
+      });
+    });
+  }
+
+  function openHeatmap(){
+    heatmapOpen = true;
+    renderHeatmap(scrubTime);
+    heatmapPanel.classList.add('show');
+    document.body.classList.add('overview-active');
+  }
+
+  function closeHeatmap(){
+    heatmapOpen = false;
+    heatmapPanel.classList.remove('show');
+    document.body.classList.remove('overview-active');
+  }
+
+  if (heatmapClose) heatmapClose.addEventListener('click', closeHeatmap);
+  const btnHeatmapSys = $('btnHeatmapSys');
+  if (btnHeatmapSys) btnHeatmapSys.addEventListener('click', openHeatmap);
+  const btnHeatmapAgenda = $('btnHeatmapAgenda');
+  if (btnHeatmapAgenda) btnHeatmapAgenda.addEventListener('click', openHeatmap);
 
   const btnShare = $('btnShare');
   const shareDrawer = $('shareDrawer');
@@ -850,6 +1133,7 @@ window.initCronoApp = function(DATA){
     updateChrome(scrubTime);
     renderActiveView(scrubTime);
     if (overviewOpen) renderOverview(scrubTime);
+    if (heatmapOpen) renderHeatmap(scrubTime);
   }
 
   // ===== Rueda horizontal infinita de tiempo (estilo Zoom Earth) =====
@@ -1020,6 +1304,7 @@ window.initCronoApp = function(DATA){
     [...overviewKpiStrip.children].forEach(c => c.classList.toggle('selected', c.dataset.kpi === activeFilter));
     renderActiveView(scrubTime);
     if (overviewOpen) renderOverview(scrubTime);
+    if (heatmapOpen) renderHeatmap(scrubTime);
   }
   filterChips.addEventListener('click', e => {
     const btn = e.target.closest('.chip'); if (!btn) return;
