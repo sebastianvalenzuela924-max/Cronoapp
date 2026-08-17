@@ -1,0 +1,103 @@
+const fs = require('fs');
+const { execSync } = require('child_process');
+
+const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <!-- Background Gradient -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1E1B4B"/>
+      <stop offset="50%" stop-color="#312E81"/>
+      <stop offset="100%" stop-color="#4F46E5"/>
+    </linearGradient>
+
+    <!-- Dial Ring Gradient -->
+    <linearGradient id="dialGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38BDF8"/>
+      <stop offset="50%" stop-color="#818CF8"/>
+      <stop offset="100%" stop-color="#C084FC"/>
+    </linearGradient>
+
+    <!-- Bolt Glow Gradient -->
+    <linearGradient id="boltGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FDE047"/>
+      <stop offset="50%" stop-color="#F59E0B"/>
+      <stop offset="100%" stop-color="#EA580C"/>
+    </linearGradient>
+
+    <!-- Subtle Inner Glow -->
+    <radialGradient id="innerGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#818CF8" stop-opacity="0.35"/>
+      <stop offset="60%" stop-color="#4F46E5" stop-opacity="0.1"/>
+      <stop offset="100%" stop-color="#1E1B4B" stop-opacity="0"/>
+    </radialGradient>
+
+    <filter id="dropShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#000000" flood-opacity="0.45"/>
+    </filter>
+
+    <filter id="boltGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#F59E0B" flood-opacity="0.6"/>
+    </filter>
+  </defs>
+
+  <!-- Full Bleed Background for Maskable & Safe Zone -->
+  <rect width="512" height="512" fill="url(#bgGrad)" />
+
+  <!-- Ambient Glow -->
+  <circle cx="256" cy="256" r="180" fill="url(#innerGlow)" />
+
+  <!-- Center Content strictly inside safe zone (R <= 170px) -->
+  <g filter="url(#dropShadow)">
+    <!-- Top Stopwatch Crown / Button -->
+    <rect x="242" y="104" width="28" height="22" rx="6" fill="#E2E8F0" />
+    <path d="M228 126 L284 126" stroke="#94A3B8" stroke-width="4" stroke-linecap="round" />
+    
+    <!-- Top-Right Lanyard/Sub-button -->
+    <rect x="340" y="132" width="16" height="18" rx="4" transform="rotate(35 348 141)" fill="#CBD5E1" opacity="0.85" />
+
+    <!-- Outer Stopwatch Dial Ring -->
+    <circle cx="256" cy="272" r="132" fill="#0F172A" stroke="url(#dialGrad)" stroke-width="12" />
+    
+    <!-- Dial Track Background -->
+    <circle cx="256" cy="272" r="114" fill="#1E1B4B" fill-opacity="0.75" />
+
+    <!-- Dial Tick Marks -->
+    <!-- 12 o'clock -->
+    <line x1="256" y1="166" x2="256" y2="178" stroke="#F8FAFC" stroke-width="4" stroke-linecap="round" />
+    <!-- 3 o'clock -->
+    <line x1="362" y1="272" x2="350" y2="272" stroke="#94A3B8" stroke-width="3" stroke-linecap="round" />
+    <!-- 6 o'clock -->
+    <line x1="256" y1="378" x2="256" y2="366" stroke="#94A3B8" stroke-width="3" stroke-linecap="round" />
+    <!-- 9 o'clock -->
+    <line x1="150" y1="272" x2="162" y2="272" stroke="#94A3B8" stroke-width="3" stroke-linecap="round" />
+
+    <!-- Additional Sub-ticks (45 deg) -->
+    <line x1="331" y1="197" x2="323" y2="205" stroke="#64748B" stroke-width="2.5" stroke-linecap="round" />
+    <line x1="331" y1="347" x2="323" y2="339" stroke="#64748B" stroke-width="2.5" stroke-linecap="round" />
+    <line x1="181" y1="347" x2="189" y2="339" stroke="#64748B" stroke-width="2.5" stroke-linecap="round" />
+    <line x1="181" y1="197" x2="189" y2="205" stroke="#64748B" stroke-width="2.5" stroke-linecap="round" />
+
+    <!-- Active Progress Arc on Dial -->
+    <path d="M 256 146 A 126 126 0 0 1 378 240" fill="none" stroke="#38BDF8" stroke-width="6" stroke-linecap="round" />
+
+    <!-- Dynamic Energy Lightning Bolt (Centered) -->
+    <g filter="url(#boltGlow)">
+      <path d="M266 182 L212 270 L250 270 L238 348 L304 252 L264 252 Z" 
+            fill="url(#boltGrad)" 
+            stroke="#FFFBEB" 
+            stroke-width="3" 
+            stroke-linejoin="round" />
+    </g>
+
+    <!-- Center Pivot Indicator Dot -->
+    <circle cx="256" cy="272" r="4" fill="#FFFFFF" />
+  </g>
+</svg>`;
+
+fs.writeFileSync('icon.svg', svgContent, 'utf8');
+
+console.log('Generating PNG icons with sharp-cli...');
+execSync('npx -y sharp-cli -i icon.svg -o icon-512.png resize 512 512', { stdio: 'inherit' });
+execSync('npx -y sharp-cli -i icon.svg -o icon-192.png resize 192 192', { stdio: 'inherit' });
+execSync('npx -y sharp-cli -i icon.svg -o apple-touch-icon.png resize 180 180', { stdio: 'inherit' });
+console.log('All icons generated successfully!');

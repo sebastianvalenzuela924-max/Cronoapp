@@ -355,9 +355,11 @@ window.initCronoApp = function(DATA){
           <div class="sys-task-main">
             <div class="sys-task-name${s==='done'?' done':''}">${t.name}</div>
             <div class="sys-task-meta">${fmtTaskWindow(t)} · ${t.duration}${t.om?' · OM '+t.om:''}</div>
+          </div>
+          <div class="sys-task-right">
+            <div class="sys-task-chip ${s}">${tagText}</div>
             ${countdown ? `<div class="sys-task-countdown ${countdown.kind}">⏱ ${countdown.text}</div>` : ''}
           </div>
-          <div class="sys-task-chip ${s}">${tagText}</div>
         `;
         row.addEventListener('click', () => openDrawer(t, scrubTime));
         listEl.appendChild(row);
@@ -648,7 +650,10 @@ window.initCronoApp = function(DATA){
             <span class="dot" style="background:${dotColor}"></span>
             <span class="name">${t.name}</span>
             <span class="chip ${s}">${tagText}</span>
-            <span class="meta">${fmtTaskWindow(t)}${countdown ? `<span class="countdown ${countdown.kind}">⏱ ${countdown.text}</span>` : ''}</span>
+            <div class="meta">
+              <span class="window">${fmtTaskWindow(t)}</span>
+              ${countdown ? `<span class="countdown ${countdown.kind}">⏱ ${countdown.text}</span>` : ''}
+            </div>
           `;
           taskRow.addEventListener('click', (e) => { e.stopPropagation(); openDrawer(t, scrubTime); });
           listEl.appendChild(taskRow);
