@@ -79,6 +79,16 @@ window.initCronoApp = function(DATA){
     return `${days[d.getDay()]} ${dd} · ${hh}:${mm}`;
   }
   function fmtTime(d){ return String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0'); }
+  // Ventana de una tarea con día de inicio y, si difiere, día de término
+  // (las tareas pueden cruzar la medianoche y durar más de un día).
+  function fmtTaskWindow(t){
+    const dayLabel = d => DAY_NAMES[d.getDay()] + ' ' + String(d.getDate()).padStart(2, '0');
+    const startDay = dayLabel(t._start);
+    if (t.isMilestone) return startDay + ' · ' + fmtTime(t._start);
+    const endDay = dayLabel(t._end);
+    if (startDay === endDay) return startDay + ' · ' + fmtTime(t._start) + '–' + fmtTime(t._end);
+    return startDay + ' ' + fmtTime(t._start) + ' → ' + endDay + ' ' + fmtTime(t._end);
+  }
 
   // Cuenta regresiva en días/horas/minutos (sin segundos) para saber cuánto
   // falta para que una tarea comience o termine, relativa al scrubTime.
@@ -344,7 +354,7 @@ window.initCronoApp = function(DATA){
           <div class="sys-task-dot" style="background:${tColor}; box-shadow: 0 0 0 2px ${tColor}33;"></div>
           <div class="sys-task-main">
             <div class="sys-task-name${s==='done'?' done':''}">${t.name}</div>
-            <div class="sys-task-meta">${fmtTime(t._start)}${t.isMilestone?'':'–'+fmtTime(t._end)} · ${t.duration}${t.om?' · OM '+t.om:''}</div>
+            <div class="sys-task-meta">${fmtTaskWindow(t)} · ${t.duration}${t.om?' · OM '+t.om:''}</div>
             ${countdown ? `<div class="sys-task-countdown ${countdown.kind}">⏱ ${countdown.text}</div>` : ''}
           </div>
           <div class="sys-task-chip ${s}">${tagText}</div>
@@ -581,9 +591,10 @@ window.initCronoApp = function(DATA){
       const activeCount = all.filter(t => stateOf(t, now) === 'active').length;
       const doneCount = all.filter(t => stateOf(t, now) === 'done').length;
       const upcomingCount = all.length - activeCount - doneCount;
+      const { state: rowState } = categoryState(all, now);
 
       const row = document.createElement('div');
-      row.className = 'overview-row' + (isOpen ? ' open' : '');
+      row.className = 'overview-row card-' + rowState + (isOpen ? ' open' : '');
       row.innerHTML = `
         <div class="overview-row-head">
           <div class="overview-row-label">
@@ -632,12 +643,11 @@ window.initCronoApp = function(DATA){
           const tagText = s === 'active' ? 'En curso' : s === 'upcoming' ? 'Próximo' : '✓ Listo';
           const taskRow = document.createElement('div');
           taskRow.className = 'overview-task state-' + s;
-          const dayLabel = DAY_NAMES[t._start.getDay()] + ' ' + String(t._start.getDate()).padStart(2, '0');
           taskRow.innerHTML = `
             <span class="dot" style="background:${dotColor}"></span>
             <span class="name">${t.name}</span>
             <span class="chip ${s}">${tagText}</span>
-            <span class="meta">${dayLabel} · ${fmtTime(t._start)}${t.isMilestone ? '' : '–' + fmtTime(t._end)}</span>
+            <span class="meta">${fmtTaskWindow(t)}</span>
           `;
           taskRow.addEventListener('click', (e) => { e.stopPropagation(); openDrawer(t, scrubTime); });
           listEl.appendChild(taskRow);
