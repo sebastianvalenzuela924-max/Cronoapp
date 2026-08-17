@@ -16,14 +16,20 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=23" />
+<link rel="stylesheet" href="style.css?v=24" />
 </head>
 <body>
 
 <!-- ===== MENU: SELECCIÓN DE CRONOGRAMA ===== -->
 <div class="menu-screen" id="menuScreen">
   <div class="menu-hero">
-    <div class="menu-mark">⚡</div>
+    <div class="menu-mark">
+      <svg viewBox="0 0 24 24" width="28" height="28" fill="none">
+        <circle cx="12" cy="13" r="8" stroke="#FFFFFF" stroke-width="2"/>
+        <path d="M12 9v4l2.5 2.5" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M10 2h4M12 2v3" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </div>
     <h1>CronoApp</h1>
     <p>Elige el cronograma que quieres seguir en vivo</p>
   </div>
@@ -38,7 +44,13 @@
       <button class="hdr-back-btn" id="btnBackMenu" aria-label="Volver al menú">
         <svg viewBox="0 0 24 24" width="18" height="18"><path d="M15 5l-7 7 7 7" stroke="currentColor" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </button>
-      <div class="hdr-mark" id="hdrMark">⚡</div>
+      <div class="hdr-mark" id="hdrMark">
+        <svg viewBox="0 0 24 24" width="17" height="17" fill="none">
+          <circle cx="12" cy="13" r="8" stroke="#FFFFFF" stroke-width="2"/>
+          <path d="M12 9v4l2.5 2.5" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M10 2h4M12 2v3" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </div>
       <h1 class="hdr-h1" id="hdrH1">CronoApp</h1>
       <button class="hdr-share-btn" id="btnShare" aria-label="Compartir">
         <svg viewBox="0 0 24 24" width="17" height="17"><circle cx="18" cy="5" r="2.6" stroke="currentColor" stroke-width="1.8" fill="none"/><circle cx="6" cy="12" r="2.6" stroke="currentColor" stroke-width="1.8" fill="none"/><circle cx="18" cy="19" r="2.6" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M8.3 10.7l7.4-4.2M8.3 13.3l7.4 4.2" stroke="currentColor" stroke-width="1.8"/></svg>
@@ -90,12 +102,8 @@
     </button>
   </section>
 
-  <!-- ===== TOOLBAR ===== -->
+  <!-- ===== TOOLBAR (CHIPS) ===== -->
   <section class="toolbar">
-    <div class="search-wrap">
-      <svg viewBox="0 0 24 24" width="20" height="20"><path d="M10 4a6 6 0 100 12 6 6 0 000-12zm10 16l-5.4-5.4" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
-      <input id="searchInput" type="text" placeholder="Buscar equipo, OM, EPS…" autocomplete="off" />
-    </div>
     <div class="filter-chips" id="filterChips">
       <button class="chip active" data-filter="all">Todos</button>
       <button class="chip" data-filter="active">En curso</button>
@@ -118,29 +126,24 @@
 
   <!-- ===== VISTA 1: SISTEMAS (barras a todo el ancho, sin scroll lateral) ===== -->
   <div class="view-panel" id="viewSystems">
-    <div class="filters-dual-row">
+    <div class="filters-compact-bar">
       <div class="agenda-filter-wrap">
         <button class="agenda-filter-btn" id="sysFilterBtn" type="button" aria-haspopup="listbox" aria-expanded="false">
-          <svg viewBox="0 0 24 24" width="15" height="15"><path d="M4 6h16M7 12h10M10 18h4" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+          <svg viewBox="0 0 24 24" width="13" height="13"><path d="M4 6h16M7 12h10M10 18h4" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
           <span id="sysFilterLabel">Todos los sistemas</span>
-          <svg class="agenda-filter-chev" viewBox="0 0 24 24" width="13" height="13"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <svg class="agenda-filter-chev" viewBox="0 0 24 24" width="11" height="11"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </button>
         <div class="agenda-filter-panel" id="sysFilterPanel" role="listbox" hidden></div>
       </div>
 
       <div class="agenda-filter-wrap">
         <button class="agenda-filter-btn" id="sysEpsFilterBtn" type="button" aria-haspopup="listbox" aria-expanded="false">
-          <svg viewBox="0 0 24 24" width="15" height="15"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          <svg viewBox="0 0 24 24" width="13" height="13"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
           <span id="sysEpsFilterLabel">Todas las empresas</span>
-          <svg class="agenda-filter-chev" viewBox="0 0 24 24" width="13" height="13"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <svg class="agenda-filter-chev" viewBox="0 0 24 24" width="11" height="11"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </button>
         <div class="agenda-filter-panel" id="sysEpsFilterPanel" role="listbox" hidden></div>
       </div>
-
-      <button class="heatmap-quick-btn" id="btnHeatmapSys" type="button" title="Ver Matriz de Carga de Cuadrillas">
-        <svg viewBox="0 0 24 24" width="15" height="15"><path d="M3 3v18h18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/><rect x="6" y="11" width="3.5" height="7" rx="1" fill="currentColor"/><rect x="11.5" y="6" width="3.5" height="12" rx="1" fill="currentColor"/><rect x="17" y="13" width="3.5" height="5" rx="1" fill="currentColor"/></svg>
-        <span>Matriz Carga</span>
-      </button>
     </div>
     <div class="sys-ruler" id="sysRuler"></div>
     <div class="sys-list" id="sysList"></div>
@@ -148,29 +151,24 @@
 
   <!-- ===== VISTA 2: AGENDA (lista vertical cronológica, grande y clara) ===== -->
   <div class="view-panel" id="viewAgenda" hidden>
-    <div class="filters-dual-row">
+    <div class="filters-compact-bar">
       <div class="agenda-filter-wrap">
         <button class="agenda-filter-btn" id="agendaFilterBtn" type="button" aria-haspopup="listbox" aria-expanded="false">
-          <svg viewBox="0 0 24 24" width="15" height="15"><path d="M4 6h16M7 12h10M10 18h4" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+          <svg viewBox="0 0 24 24" width="13" height="13"><path d="M4 6h16M7 12h10M10 18h4" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
           <span id="agendaFilterLabel">Todos los sistemas</span>
-          <svg class="agenda-filter-chev" viewBox="0 0 24 24" width="13" height="13"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <svg class="agenda-filter-chev" viewBox="0 0 24 24" width="11" height="11"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </button>
         <div class="agenda-filter-panel" id="agendaFilterPanel" role="listbox" hidden></div>
       </div>
 
       <div class="agenda-filter-wrap">
         <button class="agenda-filter-btn" id="agendaEpsFilterBtn" type="button" aria-haspopup="listbox" aria-expanded="false">
-          <svg viewBox="0 0 24 24" width="15" height="15"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          <svg viewBox="0 0 24 24" width="13" height="13"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
           <span id="agendaEpsFilterLabel">Todas las empresas</span>
-          <svg class="agenda-filter-chev" viewBox="0 0 24 24" width="13" height="13"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <svg class="agenda-filter-chev" viewBox="0 0 24 24" width="11" height="11"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </button>
         <div class="agenda-filter-panel" id="agendaEpsFilterPanel" role="listbox" hidden></div>
       </div>
-
-      <button class="heatmap-quick-btn" id="btnHeatmapAgenda" type="button" title="Ver Matriz de Carga de Cuadrillas">
-        <svg viewBox="0 0 24 24" width="15" height="15"><path d="M3 3v18h18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/><rect x="6" y="11" width="3.5" height="7" rx="1" fill="currentColor"/><rect x="11.5" y="6" width="3.5" height="12" rx="1" fill="currentColor"/><rect x="17" y="13" width="3.5" height="5" rx="1" fill="currentColor"/></svg>
-        <span>Matriz Carga</span>
-      </button>
     </div>
     <div class="agenda" id="agenda"></div>
   </div>
@@ -310,90 +308,6 @@
     </div>
   </div>
 
-  <!-- ===== MATRIZ DE CARGA DE CUADRILLAS (HEATMAP EPS) ===== -->
-  <div class="heatmap-panel" id="heatmapPanel">
-    <div class="heatmap-hdr">
-      <div>
-        <h2>📊 Carga de Cuadrillas y Empresas</h2>
-        <span class="heatmap-sub">Saturación horaria, tareas simultáneas y cuellos de botella</span>
-      </div>
-      <button class="heatmap-close" id="heatmapClose" aria-label="Cerrar matriz">✕</button>
-    </div>
-
-    <!-- Heatmap Tabs -->
-    <div class="heatmap-tabs-bar">
-      <div class="heatmap-tabs" id="heatmapTabs">
-        <button class="hm-tab active" data-tab="matrix">
-          <svg viewBox="0 0 24 24" width="14" height="14"><rect x="3" y="3" width="7" height="7" rx="1.5" fill="currentColor"/><rect x="14" y="3" width="7" height="7" rx="1.5" fill="currentColor"/><rect x="3" y="14" width="7" height="7" rx="1.5" fill="currentColor"/><rect x="14" y="14" width="7" height="7" rx="1.5" fill="currentColor"/></svg>
-          <span>Matriz Horaria</span>
-        </button>
-        <button class="hm-tab" data-tab="overview">
-          <svg viewBox="0 0 24 24" width="14" height="14"><path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
-          <span>Vista por Empresa</span>
-        </button>
-      </div>
-    </div>
-
-    <!-- Heatmap KPI Strip -->
-    <div class="heatmap-kpis" id="heatmapKpis">
-      <div class="heatmap-kpi-card">
-        <span class="hk-num" id="hkTotalEps">0</span>
-        <span class="hk-lbl">Empresas</span>
-      </div>
-      <div class="heatmap-kpi-card">
-        <span class="hk-num" id="hkActiveNow">0</span>
-        <span class="hk-lbl">Cuadrillas en Vivo</span>
-      </div>
-      <div class="heatmap-kpi-card">
-        <span class="hk-num" id="hkPeakLoad">0</span>
-        <span class="hk-lbl">Pico Simultáneo</span>
-      </div>
-      <div class="heatmap-kpi-card alert">
-        <span class="hk-num" id="hkBottleneckName">—</span>
-        <span class="hk-lbl">Mayor Saturación</span>
-      </div>
-    </div>
-
-    <div class="heatmap-body-scroll">
-      <!-- TAB 1: Matriz Horaria Heatmap + Panel de Desglose Simultáneo -->
-      <div class="heatmap-tab-content" id="tabContentMatrix">
-        <!-- Heatmap Legend -->
-        <div class="heatmap-legend">
-          <div class="hl-items">
-            <div class="hl-item"><span class="hl-dot lvl-0"></span> 0</div>
-            <div class="hl-item"><span class="hl-dot lvl-1"></span> 1 tarea</div>
-            <div class="hl-item"><span class="hl-dot lvl-2"></span> 2 tareas</div>
-            <div class="hl-item"><span class="hl-dot lvl-3"></span> 3 tareas</div>
-            <div class="hl-item"><span class="hl-dot lvl-peak"></span> 4+ (Pico)</div>
-          </div>
-          <span class="hl-hint">💡 Toca cualquier celda o empresa para ver sus tareas simultáneas</span>
-        </div>
-
-        <!-- Heatmap Table Scroll -->
-        <div class="heatmap-grid-scroll">
-          <div class="heatmap-grid-inner" id="heatmapGrid"></div>
-        </div>
-
-        <!-- Panel de Desglose de Tareas Simultáneas (en la misma vista) -->
-        <div class="heatmap-drilldown" id="heatmapDrilldown">
-          <div class="hm-drilldown-hdr">
-            <div class="hm-drilldown-title">
-              <span class="hm-drilldown-badge" id="hmDrilldownBadge">📋 Tareas Simultáneas</span>
-              <span class="hm-drilldown-sub" id="hmDrilldownSub">Selecciona una celda en la matriz para ver el desglose</span>
-            </div>
-            <button class="hm-drilldown-clear" id="hmDrilldownClear" type="button" hidden>✕ Ver todas</button>
-          </div>
-          <div class="hm-drilldown-list" id="hmDrilldownList"></div>
-        </div>
-      </div>
-
-      <!-- TAB 2: Vista Desglosada por Empresa (Panorama General EPS) -->
-      <div class="heatmap-tab-content" id="tabContentOverview" hidden>
-        <div class="heatmap-eps-rows" id="heatmapEpsRows"></div>
-      </div>
-    </div>
-  </div>
-
 <!-- ===== BOTTOM TIME SCRUBBER (fixed, controls the whole app) ===== -->
 <footer class="scrubber" id="scrubber">
   <div class="scrubber-bubble" id="scrubberBubble">
@@ -418,7 +332,7 @@
 <script src="data.js"></script>
 <script src="data-sf2-electrico.js"></script>
 <script src="data-sf2-instrumentacion.js"></script>
-<script src="app.js?v=15"></script>
+<script src="app.js?v=16"></script>
 <script src="cronogramas.js"></script>
 <script src="main.js?v=2"></script>
 </body>
