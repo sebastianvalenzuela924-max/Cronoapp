@@ -564,6 +564,7 @@ window.initCronoApp = function(DATA){
   const overviewClose = $('overviewClose');
   const overviewRows = $('overviewRows');
   const overviewKpiStrip = $('overviewKpiStrip');
+  const overviewFilterChips = $('overviewFilterChips');
   const ovKpiActive = $('ovKpiActive'), ovKpiNext = $('ovKpiNext'), ovKpiDone = $('ovKpiDone'), ovKpiTotal = $('ovKpiTotal');
   let overviewOpen = false;
 
@@ -607,14 +608,12 @@ window.initCronoApp = function(DATA){
       all.forEach((t, tIdx) => {
         if (!matchesFilter(t, now)) return;
         const s = stateOf(t, now);
-        const tColor = getTaskColor(t, tIdx, idx);
         const left = pct(t._start);
         const width = Math.max(1, pct(t._end) - left);
         const seg = document.createElement('div');
         seg.className = 'overview-seg state-' + s;
         seg.style.left = left + '%';
         seg.style.width = width + '%';
-        seg.style.background = tColor;
         seg.title = t.name;
         seg.addEventListener('click', (e) => { e.stopPropagation(); openDrawer(t, scrubTime); });
         barEl.appendChild(seg);
@@ -629,13 +628,13 @@ window.initCronoApp = function(DATA){
         all.slice().sort((a, b) => a._start - b._start).forEach((t, tIdx) => {
           if (!matchesFilter(t, now)) return;
           const s = stateOf(t, now);
-          const tColor = getTaskColor(t, tIdx, idx);
+          const dotColor = s === 'active' ? 'var(--warning)' : s === 'upcoming' ? 'var(--upcoming)' : 'var(--success)';
           const tagText = s === 'active' ? 'En curso' : s === 'upcoming' ? 'Próximo' : '✓ Listo';
           const taskRow = document.createElement('div');
           taskRow.className = 'overview-task state-' + s;
           const dayLabel = DAY_NAMES[t._start.getDay()] + ' ' + String(t._start.getDate()).padStart(2, '0');
           taskRow.innerHTML = `
-            <span class="dot" style="background:${tColor}"></span>
+            <span class="dot" style="background:${dotColor}"></span>
             <span class="name">${t.name}</span>
             <span class="chip ${s}">${tagText}</span>
             <span class="meta">${dayLabel} · ${fmtTime(t._start)}${t.isMilestone ? '' : '–' + fmtTime(t._end)}</span>
@@ -658,6 +657,7 @@ window.initCronoApp = function(DATA){
       overviewRows.appendChild(empty);
     }
     [...overviewKpiStrip.children].forEach(c => c.classList.toggle('selected', c.dataset.kpi === activeFilter));
+    [...overviewFilterChips.children].forEach(c => c.classList.toggle('active', c.dataset.filter === activeFilter));
   }
 
   function openOverview(){
@@ -993,11 +993,13 @@ window.initCronoApp = function(DATA){
 
   function syncFilterChipsUI(){
     [...filterChips.children].forEach(c => c.classList.toggle('active', c.dataset.filter === activeFilter));
+    [...overviewFilterChips.children].forEach(c => c.classList.toggle('active', c.dataset.filter === activeFilter));
   }
   function applyFilter(filter){
     activeFilter = filter;
     syncFilterChipsUI();
     [...kpiStrip.children].forEach(c => c.classList.toggle('selected', c.dataset.kpi === activeFilter));
+    [...overviewKpiStrip.children].forEach(c => c.classList.toggle('selected', c.dataset.kpi === activeFilter));
     renderActiveView(scrubTime);
     if (overviewOpen) renderOverview(scrubTime);
   }
@@ -1017,6 +1019,11 @@ window.initCronoApp = function(DATA){
   overviewKpiStrip.addEventListener('click', e => {
     const btn = e.target.closest('.kpi'); if (!btn) return;
     applyFilter(btn.dataset.kpi);
+  });
+
+  overviewFilterChips.addEventListener('click', e => {
+    const btn = e.target.closest('.chip'); if (!btn) return;
+    applyFilter(btn.dataset.filter);
   });
 
   setInterval(() => {
