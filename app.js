@@ -299,10 +299,12 @@ window.initCronoApp = function(DATA){
       if (!opt) return;
       selectedEpsFilter = opt.dataset.value;
       updateEpsLabels();
+      updateChrome(scrubTime);
       filterControls.forEach(c => c.renderPanel && c.renderPanel());
       close();
       renderActiveView(scrubTime);
       if (overviewOpen) renderOverview(scrubTime);
+      if (heatmapOpen) renderHeatmap(scrubTime);
     });
 
     renderPanel();
@@ -386,7 +388,7 @@ window.initCronoApp = function(DATA){
       anyVisible = true;
 
       const color = colorFor(idx);
-      const isOpen = openCats.has(cat.id) || !!searchQuery || activeFilter !== 'all';
+      const isOpen = openCats.has(cat.id) || !!searchQuery || activeFilter !== 'all' || selectedEpsFilter !== 'all';
       const { state: cardState, activeCount, doneCount } = categoryState(all, now);
 
       let badgeText, badgeClass;
@@ -692,7 +694,7 @@ window.initCronoApp = function(DATA){
       if (!all.length) return;
       const visible = all.filter(t => matchesEps(t) && matchesFilter(t, now));
       if (!visible.length) return;
-      const isOpen = overviewOpenCats.has(cat.id) || activeFilter !== 'all';
+      const isOpen = overviewOpenCats.has(cat.id) || !!searchQuery || activeFilter !== 'all' || selectedEpsFilter !== 'all';
       const activeCount = all.filter(t => matchesEps(t) && stateOf(t, now) === 'active').length;
       const doneCount = all.filter(t => matchesEps(t) && stateOf(t, now) === 'done').length;
       const upcomingCount = visible.length - activeCount - doneCount;
@@ -1316,15 +1318,20 @@ window.initCronoApp = function(DATA){
   function updateChrome(now){
     const in2h = new Date(now.getTime() + 2*3600000);
     let active=0, upcoming2h=0, done=0;
-    DATA.tasks.forEach(t=>{
+    const filteredTasks = selectedEpsFilter === 'all' 
+      ? DATA.tasks 
+      : DATA.tasks.filter(t => matchesEps(t));
+
+    filteredTasks.forEach(t=>{
       const s = stateOf(t, now);
       if (s==='active') active++; else if (s==='done') done++;
       if (s==='upcoming' && t._start <= in2h) upcoming2h++;
     });
+    const total = filteredTasks.length;
     kpiActive.textContent = active; kpiNext.textContent = upcoming2h;
-    kpiDone.textContent = done; kpiTotal.textContent = DATA.tasks.length;
+    kpiDone.textContent = done; kpiTotal.textContent = total;
     ovKpiActive.textContent = active; ovKpiNext.textContent = upcoming2h;
-    ovKpiDone.textContent = done; ovKpiTotal.textContent = DATA.tasks.length;
+    ovKpiDone.textContent = done; ovKpiTotal.textContent = total;
 
     let phase, hdrClass, label;
     if (now < WINDOW_START){

@@ -1,6 +1,6 @@
-const CACHE_NAME = 'cronoapp-v13';
+const CACHE_NAME = 'cronoapp-v14';
 const CORE_ASSETS = [
-  './', './index.html', './style.css?v=22', './app.js?v=14', './main.js?v=2', './cronogramas.js',
+  './', './index.html', './style.css?v=23', './app.js?v=15', './main.js?v=2', './cronogramas.js',
   './data.js', './data-sf2-electrico.js', './data-sf2-instrumentacion.js', './manifest.json',
   './icon-192.png', './icon-512.png', './apple-touch-icon.png'
 ];
