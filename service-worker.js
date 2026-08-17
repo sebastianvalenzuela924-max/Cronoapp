@@ -1,8 +1,8 @@
-const CACHE_NAME = 'cronoapp-v16';
+const CACHE_NAME = 'cronoapp-v17';
 const CORE_ASSETS = [
-  './', './index.html', './style.css?v=25', './app.js?v=16', './main.js?v=2', './cronogramas.js',
+  './', './index.html', './style.css?v=26', './app.js?v=16', './main.js?v=2', './cronogramas.js',
   './data.js', './data-sf2-electrico.js', './data-sf2-instrumentacion.js', './manifest.json',
-  './bg-menu.jpg', './icon-192.png', './icon-512.png', './apple-touch-icon.png'
+  './bg-menu.jpg', './bg-menu-desktop.jpg', './icon-192.png', './icon-512.png', './apple-touch-icon.png'
 ];
 
 self.addEventListener('install', (event) => {

@@ -837,6 +837,12 @@ body{
   position: relative;
   overflow-x: hidden;
 }
+@media (min-width: 768px){
+  .menu-screen{
+    background-image: url('bg-menu-desktop.jpg');
+    background-position: center 30%;
+  }
+}
 .menu-screen::before{
   content: '';
   position: fixed; inset: 0;
