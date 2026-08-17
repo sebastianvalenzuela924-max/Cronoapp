@@ -1237,7 +1237,9 @@ window.initCronoApp = function(DATA){
 
   btnLive.addEventListener('click', () => {
     stopPlaying(); autoFollow = true;
-    scrollToTime(new Date(), { smooth: true });
+    const now = new Date();
+    scrollToTime(now, { smooth: true });
+    setScrubTime(now);
   });
 
   const kpiStrip = $('kpiStrip');
@@ -1287,11 +1289,13 @@ window.initCronoApp = function(DATA){
 
   setInterval(() => {
     if (autoFollow && !playing){
-      scrollToTime(new Date(), { smooth: false });
+      const now = new Date();
+      scrollToTime(now, { smooth: false });
+      setScrubTime(now);
     } else {
       updateChrome(scrubTime);
     }
-  }, 15000);
+  }, 1000);
 
   const hdrEl = document.querySelector('.hdr');
   function syncHeaderHeight(){
