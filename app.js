@@ -908,13 +908,23 @@ window.initCronoApp = function(DATA){
   function updateChrome(now){
     const in2h = new Date(now.getTime() + 2*3600000);
     let active=0, upcoming2h=0, done=0;
-    const filteredTasks = selectedEpsFilter === 'all' 
-      ? DATA.tasks 
-      : DATA.tasks.filter(t => matchesEps(t));
+    const isEpsFiltered = selectedEpsFilter !== 'all';
+    const filteredTasks = isEpsFiltered 
+      ? DATA.tasks.filter(t => matchesEps(t))
+      : DATA.tasks;
 
+    let sumProgress = 0;
     filteredTasks.forEach(t=>{
       const s = stateOf(t, now);
-      if (s==='active') active++; else if (s==='done') done++;
+      if (s==='active'){
+        active++;
+        const duration = t._end - t._start;
+        const taskProg = duration > 0 ? Math.max(0, Math.min(1, (now - t._start) / duration)) : 0.5;
+        sumProgress += taskProg;
+      } else if (s==='done'){
+        done++;
+        sumProgress += 1;
+      }
       if (s==='upcoming' && t._start <= in2h) upcoming2h++;
     });
     const total = filteredTasks.length;
@@ -923,29 +933,61 @@ window.initCronoApp = function(DATA){
     ovKpiActive.textContent = active; ovKpiNext.textContent = upcoming2h;
     ovKpiDone.textContent = done; ovKpiTotal.textContent = total;
 
-    let phase, hdrClass, label;
-    if (now < WINDOW_START){
-      const days = Math.ceil((WINDOW_START - now)/86400000);
-      phase = 'Antes de iniciar'; hdrClass = 'state-soon'; label = `Inicia en ${days} día${days===1?'':'s'}`;
-    } else if (OUTAGE_START && now < OUTAGE_START){
-      phase = 'Preparación'; hdrClass = 'state-soon'; label = 'Trabajos previos';
-    } else if (OUTAGE_START && OUTAGE_END && now < OUTAGE_END){
-      phase = 'Corte total de energía'; hdrClass = 'state-outage'; label = 'Sin energía SF1 · SF2';
-    } else if (now < MASTER._end){
-      phase = OUTAGE_START ? 'Restableciendo energía' : 'En ejecución'; hdrClass = OUTAGE_START ? 'state-soon' : 'state-live'; label = OUTAGE_START ? 'Reenergizando' : 'En curso';
+    let phase, hdrClass, label, p;
+
+    if (isEpsFiltered){
+      if ($('summaryEyebrow')) $('summaryEyebrow').textContent = `Avance Empresa · ${selectedEpsFilter}`;
+      p = total > 0 ? Math.max(0, Math.min(100, Math.round((sumProgress / total) * 100))) : 0;
+
+      if (done === total && total > 0){
+        phase = 'Trabajos finalizados'; hdrClass = 'state-live'; label = `${selectedEpsFilter} · Completado`;
+      } else if (active > 0){
+        phase = `${active} tarea${active>1?'s':''} en ejecución (${done}/${total} listas)`;
+        hdrClass = 'state-live';
+        label = `${selectedEpsFilter} · En curso`;
+      } else if (done > 0){
+        phase = `${done} de ${total} tareas listas (en pausa)`;
+        hdrClass = 'state-soon';
+        label = `${selectedEpsFilter} · Parcial`;
+      } else {
+        phase = 'Sin iniciar'; hdrClass = 'state-soon'; label = `${selectedEpsFilter} · Pendiente`;
+      }
+
+      if (filteredTasks.length > 0){
+        const epsStarts = filteredTasks.map(t => t._start.getTime());
+        const epsEnds = filteredTasks.map(t => t._end.getTime());
+        summaryFrom.textContent = fmtDayTime(new Date(Math.min(...epsStarts)));
+        summaryTo.textContent = fmtDayTime(new Date(Math.max(...epsEnds)));
+      } else {
+        summaryFrom.textContent = '—'; summaryTo.textContent = '—';
+      }
     } else {
-      phase = 'Programa finalizado'; hdrClass = 'state-live'; label = 'Completado';
+      if ($('summaryEyebrow')) $('summaryEyebrow').textContent = 'Programa general · PG26L2';
+      p = Math.max(0, Math.min(100, Math.round(((now-WINDOW_START)/WINDOW_MS)*100)));
+
+      if (now < WINDOW_START){
+        const days = Math.ceil((WINDOW_START - now)/86400000);
+        phase = 'Antes de iniciar'; hdrClass = 'state-soon'; label = `Inicia en ${days} día${days===1?'':'s'}`;
+      } else if (OUTAGE_START && now < OUTAGE_START){
+        phase = 'Preparación'; hdrClass = 'state-soon'; label = 'Trabajos previos';
+      } else if (OUTAGE_START && OUTAGE_END && now < OUTAGE_END){
+        phase = 'Corte total de energía'; hdrClass = 'state-outage'; label = 'Sin energía SF1 · SF2';
+      } else if (now < MASTER._end){
+        phase = OUTAGE_START ? 'Restableciendo energía' : 'En ejecución'; hdrClass = OUTAGE_START ? 'state-soon' : 'state-live'; label = OUTAGE_START ? 'Reenergizando' : 'En curso';
+      } else {
+        phase = 'Programa finalizado'; hdrClass = 'state-live'; label = 'Completado';
+      }
+      summaryFrom.textContent = fmtDayTime(MASTER._start);
+      summaryTo.textContent = fmtDayTime(MASTER._end);
     }
+
     hdrLive.className = 'hdr-status ' + hdrClass;
     liveLabel.textContent = label + (autoFollow ? ' · en vivo' : '');
 
-    const p = Math.max(0, Math.min(100, Math.round(((now-WINDOW_START)/WINDOW_MS)*100)));
     summaryPct.textContent = p + '%';
     summaryFill.style.width = p + '%';
     summaryPhase.textContent = phase;
     summaryPhase.className = 'summary-phase ' + (hdrClass==='state-outage' ? 'outage' : hdrClass==='state-soon' ? 'soon' : hdrClass==='state-live' ? 'live' : '');
-    summaryFrom.textContent = fmtDayTime(MASTER._start);
-    summaryTo.textContent = fmtDayTime(MASTER._end);
   }
 
   function updateScrubberBubble(){
