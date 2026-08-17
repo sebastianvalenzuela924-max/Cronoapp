@@ -183,11 +183,13 @@ window.initCronoApp = function(DATA){
   }
 
   function updateEpsLabels(){
-    const labelText = selectedEpsFilter === 'all' ? 'Todas las EPS' : `👷 ${selectedEpsFilter}`;
+    const labelText = selectedEpsFilter === 'all' ? 'Todas las empresas' : `👷 ${selectedEpsFilter}`;
     if ($('sysEpsFilterLabel')) $('sysEpsFilterLabel').textContent = labelText;
     if ($('agendaEpsFilterLabel')) $('agendaEpsFilterLabel').textContent = labelText;
+    if ($('overviewEpsFilterLabel')) $('overviewEpsFilterLabel').textContent = labelText;
     if ($('sysEpsFilterBtn')) $('sysEpsFilterBtn').classList.toggle('filtered', selectedEpsFilter !== 'all');
     if ($('agendaEpsFilterBtn')) $('agendaEpsFilterBtn').classList.toggle('filtered', selectedEpsFilter !== 'all');
+    if ($('overviewEpsFilterBtn')) $('overviewEpsFilterBtn').classList.toggle('filtered', selectedEpsFilter !== 'all');
   }
 
   // Filtro de sistema (dropdown propio, en vez de <select> nativo, para
@@ -257,7 +259,7 @@ window.initCronoApp = function(DATA){
       allOpt.className = 'agenda-filter-option' + (isAll ? ' selected' : '');
       allOpt.setAttribute('role', 'option');
       allOpt.dataset.value = 'all';
-      allOpt.innerHTML = `<span class="opt-icon">👷</span><span class="opt-label">Todas las empresas (EPS)</span><span class="opt-count">${DATA.tasks.length}</span>`;
+      allOpt.innerHTML = `<span class="opt-icon">👷</span><span class="opt-label">Todas las empresas</span><span class="opt-count">${DATA.tasks.length}</span>`;
       panel.appendChild(allOpt);
 
       epsList.forEach(eps => {
@@ -315,6 +317,7 @@ window.initCronoApp = function(DATA){
     () => sysCategoryFilter, (v) => { sysCategoryFilter = v; });
   setupEpsFilter($('sysEpsFilterBtn'), $('sysEpsFilterLabel'), $('sysEpsFilterPanel'));
   setupEpsFilter($('agendaEpsFilterBtn'), $('agendaEpsFilterLabel'), $('agendaEpsFilterPanel'));
+  setupEpsFilter($('overviewEpsFilterBtn'), $('overviewEpsFilterLabel'), $('overviewEpsFilterPanel'));
 
   document.addEventListener('click', (e) => {
     if (!e.target.closest('.agenda-filter-wrap')) filterControls.forEach(c => c.close());
@@ -1052,7 +1055,7 @@ window.initCronoApp = function(DATA){
       <table class="heatmap-table">
         <thead>
           <tr>
-            <th class="th-eps-header">Empresa Contratista (EPS)</th>
+            <th class="th-eps-header">Empresa Contratista</th>
             ${slots.map(slot => {
               const isLiveSlot = now >= slot.start && now < slot.end;
               return `<th class="th-time-slot ${isLiveSlot ? 'is-live' : ''}">
