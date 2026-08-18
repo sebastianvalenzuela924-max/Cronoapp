@@ -1255,14 +1255,14 @@ body{
   display: inline-flex;
   align-items: center;
   gap: 3px;
-  font-size: 10.5px;
-  font-weight: 700;
-  padding: 1.5px 7px;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 2px 8px;
   border-radius: 999px;
-  background: rgba(56, 189, 248, 0.12);
-  color: var(--brand);
-  border: 1px solid rgba(56, 189, 248, 0.25);
-  margin-left: 6px;
+  background: rgba(56, 189, 248, 0.15);
+  color: #38BDF8;
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  margin-left: 8px;
   vertical-align: middle;
 }
 .sys-task.has-subtasks, .overview-task.has-subtasks{
@@ -1271,66 +1271,62 @@ body{
 .overview-subtasks-tree{
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding: 8px 12px 12px 28px;
-  background: rgba(15, 23, 42, 0.45);
-  border-left: 2px solid rgba(56, 189, 248, 0.35);
-  margin: 0 0 8px 16px;
-  border-radius: 0 0 10px 10px;
-  animation: fadeInCascade 0.2s ease-out;
-}
-@keyframes fadeInCascade{
-  from{ opacity: 0; transform: translateY(-4px); }
-  to{ opacity: 1; transform: translateY(0); }
+  gap: 8px;
+  padding: 10px 14px 12px 20px;
+  background: #0B1120;
+  border-left: 3px solid #38BDF8;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  margin: 0 0 10px 12px;
+  border-radius: 0 0 12px 12px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
 }
 .subtask-tree-item{
   display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  padding: 7px 10px;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  transition: all .15s ease;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 12px;
+  border-radius: 10px;
+  background: #1E293B;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  transition: background .15s ease, border-color .15s ease;
   cursor: pointer;
 }
 .subtask-tree-item:hover{
-  background: rgba(255, 255, 255, 0.07);
-  border-color: rgba(255, 255, 255, 0.14);
+  background: #334155;
+  border-color: rgba(56, 189, 248, 0.4);
 }
 .subtask-tree-item.state-active{
-  background: rgba(245, 158, 11, 0.1);
-  border-color: rgba(245, 158, 11, 0.35);
+  background: rgba(245, 158, 11, 0.18);
+  border-color: rgba(245, 158, 11, 0.6);
 }
 .subtask-tree-item.state-done{
-  background: rgba(16, 185, 129, 0.05);
-  border-color: rgba(16, 185, 129, 0.2);
+  background: rgba(16, 185, 129, 0.12);
+  border-color: rgba(16, 185, 129, 0.35);
 }
 .tree-badge{
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
   flex: none;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 10px;
-  font-weight: 800;
-  margin-top: 1px;
+  font-size: 11px;
+  font-weight: 900;
 }
 .tree-badge.upcoming{
-  background: rgba(148, 163, 184, 0.12);
-  color: var(--text-dim);
-  border: 1px solid rgba(148, 163, 184, 0.25);
+  background: #334155;
+  color: #E2E8F0;
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 .tree-badge.active{
-  background: var(--warning);
+  background: #F59E0B;
   color: #000;
   box-shadow: 0 0 8px rgba(245, 158, 11, 0.5);
-  animation: pulse-badge 1.8s infinite;
 }
 .tree-badge.done{
-  background: var(--success);
+  background: #10B981;
   color: #fff;
 }
 .tree-content{
@@ -1338,47 +1334,48 @@ body{
   min-width: 0;
 }
 .tree-name{
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
-  color: var(--text);
-  line-height: 1.3;
+  color: #FFFFFF;
+  line-height: 1.35;
 }
 .subtask-tree-item.state-done .tree-name{
-  color: var(--text-dim);
+  color: #94A3B8;
 }
 .tree-meta{
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 4px 6px;
-  margin-top: 3px;
+  gap: 5px 8px;
+  margin-top: 4px;
 }
 .tree-window{
-  font-size: 10.5px;
-  font-weight: 600;
-  color: var(--text-muted);
-}
-.tree-tag{
-  font-size: 10px;
+  font-size: 11.5px;
   font-weight: 700;
-  padding: 1px 5px;
-  border-radius: 5px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  color: var(--text-dim);
-}
-.tree-tag.dur{
-  color: var(--brand);
-  background: var(--brand-soft);
-  border-color: rgba(56, 189, 248, 0.2);
-}
-.tree-tag.pto{
   color: #E2E8F0;
 }
+.tree-tag{
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #E2E8F0;
+}
+.tree-tag.dur{
+  color: #38BDF8;
+  background: rgba(56, 189, 248, 0.16);
+  border-color: rgba(56, 189, 248, 0.35);
+}
+.tree-tag.pto{
+  color: #F8FAFC;
+  background: rgba(255, 255, 255, 0.1);
+}
 .tree-tag.ejecutor{
-  color: #A78BFA;
-  background: rgba(167, 139, 250, 0.12);
-  border-color: rgba(167, 139, 250, 0.25);
+  color: #C084FC;
+  background: rgba(192, 132, 252, 0.16);
+  border-color: rgba(192, 132, 252, 0.35);
 }
 
 /* ===== DESKTOP MODAL DRAWER OPTIMIZATION ===== */

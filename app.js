@@ -1251,12 +1251,17 @@ window.initCronoApp = function(DATA){
     scrubberBubbleTime.textContent = fmtTime(scrubTime);
   }
 
-  function setScrubTime(t){
+  let lastRenderedMinute = -1;
+  function setScrubTime(t, force = false){
     scrubTime = clampToWindow(t);
     updateScrubberBubble();
     updateChrome(scrubTime);
-    renderActiveView(scrubTime);
-    if (overviewOpen) renderOverview(scrubTime);
+    const curMin = Math.floor(scrubTime.getTime() / 60000);
+    if (force || curMin !== lastRenderedMinute){
+      lastRenderedMinute = curMin;
+      renderActiveView(scrubTime);
+      if (overviewOpen) renderOverview(scrubTime);
+    }
   }
 
   // ===== Rueda horizontal infinita de tiempo (estilo Zoom Earth) =====
