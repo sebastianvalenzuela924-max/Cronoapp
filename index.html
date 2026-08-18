@@ -16,7 +16,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=36" />
+<link rel="stylesheet" href="style.css?v=37" />
 </head>
 <body>
 
@@ -304,6 +304,15 @@
       </button>
     </div>
 
+    <!-- Buscador en Panorama General -->
+    <div class="overview-search-wrap">
+      <div class="search-box">
+        <svg viewBox="0 0 24 24" width="15" height="15" class="search-icon"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2" fill="none"/><path d="m20 20-3.5-3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <input type="text" id="overviewSearchInput" class="search-input" placeholder="Buscar tarea, OM, equipo..." autocomplete="off" />
+        <button id="overviewSearchClear" class="search-clear" type="button" aria-label="Limpiar búsqueda" hidden>✕</button>
+      </div>
+    </div>
+
     <section class="kpis overview-kpis" id="overviewKpiStrip">
       <button class="kpi kpi-active" data-kpi="active">
         <span class="kpi-num" id="ovKpiActive">0</span>
@@ -360,7 +369,7 @@
 <script src="data.js"></script>
 <script src="data-sf2-electrico.js"></script>
 <script src="data-sf2-instrumentacion.js"></script>
-<script src="app.js?v=25"></script>
+<script src="app.js?v=26"></script>
 <script src="cronogramas.js"></script>
 <script src="main.js?v=2"></script>
 </body>

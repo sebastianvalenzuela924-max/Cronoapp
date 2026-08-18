@@ -1195,7 +1195,7 @@ body{
 }
 
 /* ===== SEARCH BAR ===== */
-.search-wrap{
+.search-wrap, .overview-search-wrap{
   padding: 0 18px 10px;
 }
 .search-box{

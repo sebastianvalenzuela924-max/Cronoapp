@@ -896,11 +896,12 @@ window.initCronoApp = function(DATA){
     DATA.categories.forEach((cat, idx) => {
       const all = tasksByCat[cat.id] || [];
       if (!all.length) return;
-      const visible = all.filter(t => matchesEps(t) && matchesFilter(t, now));
+      const visible = all.filter(t => matchesSearch(t, cat) && matchesFilter(t, now));
       if (!visible.length) return;
+      if (searchQuery) overviewOpenCats.add(cat.id);
       const isOpen = overviewOpenCats.has(cat.id);
-      const activeCount = all.filter(t => matchesEps(t) && stateOf(t, now) === 'active').length;
-      const doneCount = all.filter(t => matchesEps(t) && stateOf(t, now) === 'done').length;
+      const activeCount = all.filter(t => matchesSearch(t, cat) && stateOf(t, now) === 'active').length;
+      const doneCount = all.filter(t => matchesSearch(t, cat) && stateOf(t, now) === 'done').length;
       const upcomingCount = visible.length - activeCount - doneCount;
       const { state: rowState } = categoryState(all, now);
 
@@ -928,7 +929,7 @@ window.initCronoApp = function(DATA){
         barEl.appendChild(div);
       });
       all.forEach((t, tIdx) => {
-        if (!matchesEps(t) || !matchesFilter(t, now)) return;
+        if (!matchesSearch(t, cat) || !matchesFilter(t, now)) return;
         const s = stateOf(t, now);
         const left = pct(t._start);
         const width = Math.max(1, pct(t._end) - left);
@@ -948,7 +949,7 @@ window.initCronoApp = function(DATA){
       if (isOpen){
         const listEl = row.querySelector('.overview-tasklist');
         all.slice().sort((a, b) => a._start - b._start).forEach((t, tIdx) => {
-          if (!matchesEps(t) || !matchesFilter(t, now)) return;
+          if (!matchesSearch(t, cat) || !matchesFilter(t, now)) return;
           const s = stateOf(t, now);
           const dotColor = s === 'active' ? 'var(--warning)' : s === 'upcoming' ? 'var(--upcoming)' : 'var(--success)';
           const tagText = s === 'active' ? 'En curso' : s === 'upcoming' ? 'Próximo' : '✓ Listo';
@@ -1420,24 +1421,35 @@ window.initCronoApp = function(DATA){
     setScrubTime(now);
   });
 
+  const overviewSearchInput = $('overviewSearchInput');
+  const overviewSearchClear = $('overviewSearchClear');
+
+  function updateSearchState(val, source){
+    searchQuery = val.trim();
+    if (searchInput && source !== searchInput) searchInput.value = val;
+    if (overviewSearchInput && source !== overviewSearchInput) overviewSearchInput.value = val;
+    if (searchClear) searchClear.hidden = !searchQuery;
+    if (overviewSearchClear) overviewSearchClear.hidden = !searchQuery;
+    renderActiveView(scrubTime);
+    if (overviewOpen) renderOverview(scrubTime);
+  }
+
   if (searchInput) {
-    searchInput.addEventListener('input', e => { 
-      searchQuery = e.target.value.trim(); 
-      if (searchClear) searchClear.hidden = !searchQuery;
-      renderActiveView(scrubTime);
-      if (overviewOpen) renderOverview(scrubTime);
-    });
+    searchInput.addEventListener('input', e => updateSearchState(e.target.value, searchInput));
+  }
+  if (overviewSearchInput) {
+    overviewSearchInput.addEventListener('input', e => updateSearchState(e.target.value, overviewSearchInput));
   }
   if (searchClear) {
     searchClear.addEventListener('click', () => {
-      if (searchInput) {
-        searchInput.value = '';
-        searchInput.focus();
-      }
-      searchQuery = '';
-      searchClear.hidden = true;
-      renderActiveView(scrubTime);
-      if (overviewOpen) renderOverview(scrubTime);
+      updateSearchState('', null);
+      if (searchInput) searchInput.focus();
+    });
+  }
+  if (overviewSearchClear) {
+    overviewSearchClear.addEventListener('click', () => {
+      updateSearchState('', null);
+      if (overviewSearchInput) overviewSearchInput.focus();
     });
   }
 
