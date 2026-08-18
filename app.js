@@ -147,6 +147,7 @@ window.initCronoApp = function(DATA){
   let agendaCategoryFilter = 'all';
   let sysCategoryFilter = 'all';
   const openCats = new Set();
+  const expandedTasks = new Set();
   let viewMode = 'systems';
 
   const $ = id => document.getElementById(id);
@@ -158,6 +159,7 @@ window.initCronoApp = function(DATA){
   const summaryPhase = $('summaryPhase'), summaryPct = $('summaryPct'), summaryFill = $('summaryFill');
   const summaryFrom = $('summaryFrom'), summaryTo = $('summaryTo');
   const searchInput = $('searchInput');
+  const searchClear = $('searchClear');
   const filterChips = $('filterChips');
   const drawer = $('drawer'), drawerBackdrop = $('drawerBackdrop'), drawerClose = $('drawerClose');
   const viewToggle = $('viewToggle');
@@ -446,11 +448,27 @@ window.initCronoApp = function(DATA){
     if (!matchesEps(t)) return false;
     if (!searchQuery) return true;
     const q = searchQuery.toLowerCase();
-    return t.name.toLowerCase().includes(q) || (t.om||'').toLowerCase().includes(q) ||
-      (t.eps||'').toLowerCase().includes(q) || cat.label.toLowerCase().includes(q);
+    if (t.name && t.name.toLowerCase().includes(q)) return true;
+    if (t.om && String(t.om).toLowerCase().includes(q)) return true;
+    if (t.eps && t.eps.toLowerCase().includes(q)) return true;
+    if (cat && cat.label && cat.label.toLowerCase().includes(q)) return true;
+    if (t.subtasks && t.subtasks.some(st => 
+      (st.name && st.name.toLowerCase().includes(q)) || 
+      (st.pto_trab && st.pto_trab.toLowerCase().includes(q)) || 
+      (st.ejecutor && st.ejecutor.toLowerCase().includes(q))
+    )) {
+      return true;
+    }
+    return false;
   }
   function matchesFilter(t, now){
     if (activeFilter === 'all') return true;
+    if (activeFilter === 'today'){
+      const tStartDay = dayKey(t._start);
+      const tEndDay = dayKey(t._end);
+      const currentDay = dayKey(now);
+      return tStartDay === currentDay || tEndDay === currentDay || (t._start <= now && t._end >= now);
+    }
     if (activeFilter === 'soon'){
       const in2h = new Date(now.getTime() + 2*3600000);
       return stateOf(t, now) === 'upcoming' && t._start <= in2h;
@@ -523,7 +541,7 @@ window.initCronoApp = function(DATA){
         barEl.appendChild(seg);
       });
       const marker = document.createElement('div');
-      marker.className = 'sys-now-marker';
+      marker.className = 'sys-now-marker live-red-marker';
       marker.style.left = pct(now) + '%';
       barEl.appendChild(marker);
 
@@ -540,21 +558,67 @@ window.initCronoApp = function(DATA){
         const tColor = getTaskColor(t, tIdx, idx);
         const tagText = s==='active' ? 'En curso' : s==='upcoming' ? 'Próximo' : '✓ Listo';
         const countdown = countdownInfo(t, now);
+        const hasSub = t.subtasks && t.subtasks.length > 0;
+        const isTaskExpanded = expandedTasks.has(t.id);
+
+        const taskWrap = document.createElement('div');
+        taskWrap.className = 'sys-task-wrap' + (isTaskExpanded ? ' is-expanded' : '');
+
         const row = document.createElement('div');
-        row.className = 'sys-task state-' + s;
+        row.className = 'sys-task state-' + s + (hasSub ? ' has-subtasks' : '');
         row.innerHTML = `
           <div class="sys-task-dot" style="background:${tColor}; box-shadow: 0 0 0 2px ${tColor}33;"></div>
           <div class="sys-task-main">
             <div class="sys-task-name${s==='done'?' done':''}">${t.name}</div>
-            <div class="sys-task-meta">${fmtTaskWindow(t)} · ${t.duration}${t.om?' · OM '+t.om:''}</div>
+            <div class="sys-task-meta">${fmtTaskWindow(t)} · ${t.duration}${t.om?' · OM '+t.om:''}${hasSub ? ` · <span class="subtask-inline-pill">${t.subtasks.length} pasos ${isTaskExpanded?'▴':'▾'}</span>` : ''}</div>
           </div>
           <div class="sys-task-right">
             <div class="sys-task-chip ${s}">${tagText}</div>
             ${countdown ? `<div class="sys-task-countdown ${countdown.kind}">⏱ ${countdown.text}</div>` : ''}
           </div>
         `;
-        row.addEventListener('click', () => openDrawer(t, scrubTime));
-        listEl.appendChild(row);
+        row.addEventListener('click', (e) => {
+          if (window.innerWidth >= 768 && hasSub){
+            if (expandedTasks.has(t.id)) expandedTasks.delete(t.id);
+            else expandedTasks.add(t.id);
+            renderSystems(scrubTime);
+          } else {
+            openDrawer(t, scrubTime);
+          }
+        });
+        taskWrap.appendChild(row);
+
+        if (isTaskExpanded && hasSub){
+          const treeEl = document.createElement('div');
+          treeEl.className = 'overview-subtasks-tree';
+          t.subtasks.forEach((st, sIdx) => {
+            const s_sub = stateOf(st, now);
+            const stRow = document.createElement('div');
+            stRow.className = 'subtask-tree-item state-' + s_sub;
+            const badgeIcon = s_sub === 'done' ? '✓' : s_sub === 'active' ? '⚡' : String(sIdx + 1);
+            stRow.innerHTML = `
+              <div class="tree-line"></div>
+              <div class="tree-badge ${s_sub}">${badgeIcon}</div>
+              <div class="tree-content">
+                <div class="tree-name">${st.name}</div>
+                <div class="tree-meta">
+                  <span class="tree-window">${fmtTaskWindow(st)}</span>
+                  ${st.duration ? `<span class="tree-tag dur">⏱ ${st.duration}</span>` : ''}
+                  ${st.pto_trab ? `<span class="tree-tag pto">${st.pto_trab}</span>` : ''}
+                  ${st.ejecutor ? `<span class="tree-tag ejecutor">👤 ${st.ejecutor}</span>` : ''}
+                </div>
+              </div>
+            `;
+            stRow.addEventListener('click', (e) => {
+              e.stopPropagation();
+              openDrawer(t, scrubTime);
+            });
+            treeEl.appendChild(stRow);
+          });
+          taskWrap.appendChild(treeEl);
+        }
+
+        listEl.appendChild(taskWrap);
       });
 
       sysList.appendChild(card);
@@ -877,7 +941,7 @@ window.initCronoApp = function(DATA){
         barEl.appendChild(seg);
       });
       const nowLine = document.createElement('div');
-      nowLine.className = 'overview-now-line';
+      nowLine.className = 'overview-now-line live-red-marker';
       nowLine.style.left = pct(now) + '%';
       barEl.appendChild(nowLine);
 
@@ -889,19 +953,69 @@ window.initCronoApp = function(DATA){
           const dotColor = s === 'active' ? 'var(--warning)' : s === 'upcoming' ? 'var(--upcoming)' : 'var(--success)';
           const tagText = s === 'active' ? 'En curso' : s === 'upcoming' ? 'Próximo' : '✓ Listo';
           const countdown = countdownInfo(t, now);
+          const hasSub = t.subtasks && t.subtasks.length > 0;
+          const isTaskExpanded = expandedTasks.has(t.id);
+
+          const taskWrap = document.createElement('div');
+          taskWrap.className = 'overview-task-wrap' + (isTaskExpanded ? ' is-expanded' : '');
+
           const taskRow = document.createElement('div');
-          taskRow.className = 'overview-task state-' + s;
+          taskRow.className = 'overview-task state-' + s + (hasSub ? ' has-subtasks' : '');
           taskRow.innerHTML = `
             <span class="dot" style="background:${dotColor}"></span>
             <span class="name">${t.name}</span>
+            ${hasSub ? `<span class="subtasks-count-pill">${t.subtasks.length} pasos ${isTaskExpanded ? '▴' : '▾'}</span>` : ''}
             <span class="chip ${s}">${tagText}</span>
             <div class="meta">
               <span class="window">${fmtTaskWindow(t)}</span>
               ${countdown ? `<span class="countdown ${countdown.kind}">⏱ ${countdown.text}</span>` : ''}
             </div>
           `;
-          taskRow.addEventListener('click', (e) => { e.stopPropagation(); openDrawer(t, scrubTime); });
-          listEl.appendChild(taskRow);
+
+          taskRow.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (window.innerWidth >= 768 && hasSub){
+              if (expandedTasks.has(t.id)) expandedTasks.delete(t.id);
+              else expandedTasks.add(t.id);
+              renderOverview(scrubTime);
+            } else {
+              openDrawer(t, scrubTime);
+            }
+          });
+
+          taskWrap.appendChild(taskRow);
+
+          if (isTaskExpanded && hasSub){
+            const treeEl = document.createElement('div');
+            treeEl.className = 'overview-subtasks-tree';
+            t.subtasks.forEach((st, sIdx) => {
+              const s_sub = stateOf(st, now);
+              const stRow = document.createElement('div');
+              stRow.className = 'subtask-tree-item state-' + s_sub;
+              const badgeIcon = s_sub === 'done' ? '✓' : s_sub === 'active' ? '⚡' : String(sIdx + 1);
+              stRow.innerHTML = `
+                <div class="tree-line"></div>
+                <div class="tree-badge ${s_sub}">${badgeIcon}</div>
+                <div class="tree-content">
+                  <div class="tree-name">${st.name}</div>
+                  <div class="tree-meta">
+                    <span class="tree-window">${fmtTaskWindow(st)}</span>
+                    ${st.duration ? `<span class="tree-tag dur">⏱ ${st.duration}</span>` : ''}
+                    ${st.pto_trab ? `<span class="tree-tag pto">${st.pto_trab}</span>` : ''}
+                    ${st.ejecutor ? `<span class="tree-tag ejecutor">👤 ${st.ejecutor}</span>` : ''}
+                  </div>
+                </div>
+              `;
+              stRow.addEventListener('click', (e) => {
+                e.stopPropagation();
+                openDrawer(t, scrubTime);
+              });
+              treeEl.appendChild(stRow);
+            });
+            taskWrap.appendChild(treeEl);
+          }
+
+          listEl.appendChild(taskWrap);
         });
       }
 
@@ -1301,9 +1415,25 @@ window.initCronoApp = function(DATA){
     setScrubTime(now);
   });
 
-  const kpiStrip = $('kpiStrip');
   if (searchInput) {
-    searchInput.addEventListener('input', e => { searchQuery = e.target.value.trim(); renderActiveView(scrubTime); });
+    searchInput.addEventListener('input', e => { 
+      searchQuery = e.target.value.trim(); 
+      if (searchClear) searchClear.hidden = !searchQuery;
+      renderActiveView(scrubTime);
+      if (overviewOpen) renderOverview(scrubTime);
+    });
+  }
+  if (searchClear) {
+    searchClear.addEventListener('click', () => {
+      if (searchInput) {
+        searchInput.value = '';
+        searchInput.focus();
+      }
+      searchQuery = '';
+      searchClear.hidden = true;
+      renderActiveView(scrubTime);
+      if (overviewOpen) renderOverview(scrubTime);
+    });
   }
 
   function syncFilterChipsUI(){
