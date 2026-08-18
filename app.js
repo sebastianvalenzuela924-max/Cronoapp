@@ -42,7 +42,13 @@ window.initCronoApp = function(DATA){
   DATA.tasks.forEach(t => {
     t._start = new Date(t.start);
     t._end = new Date(t.end);
-    tasksByCat[t.category].push(t);
+    if (t.subtasks && t.subtasks.length){
+      t.subtasks.forEach(st => {
+        st._start = new Date(st.start);
+        st._end = new Date(st.end);
+      });
+    }
+    if (tasksByCat[t.category]) tasksByCat[t.category].push(t);
   });
   const byId = {}; DATA.tasks.forEach(t => byId[t.id] = t);
   const OUTAGE_TASK = DATA.master && byId[7] ? byId[7] : null;
@@ -742,6 +748,58 @@ window.initCronoApp = function(DATA){
     progressEl.style.width = progress + '%';
     progressEl.style.background = tColor;
     $('drawerPct').textContent = progress + '% avance';
+
+    // Desglose de subtareas si existen
+    const subtasksWrap = $('drawerSubtasksWrap');
+    const subtasksList = $('drawerSubtasksList');
+    const subtasksCount = $('drawerSubtasksCount');
+
+    if (subtasksWrap && subtasksList){
+      if (t.subtasks && t.subtasks.length > 0){
+        subtasksWrap.hidden = false;
+        const totalSub = t.subtasks.length;
+        const doneSub = t.subtasks.filter(st => stateOf(st, now) === 'done').length;
+        const activeSub = t.subtasks.filter(st => stateOf(st, now) === 'active').length;
+        
+        if (subtasksCount){
+          subtasksCount.textContent = `${totalSub} pasos · ${doneSub} listos${activeSub > 0 ? ' (' + activeSub + ' en curso)' : ''}`;
+        }
+        subtasksList.innerHTML = '';
+
+        t.subtasks.forEach((st, idx) => {
+          const s_sub = stateOf(st, now);
+          const stEl = document.createElement('div');
+          stEl.className = 'drawer-subtask-item state-' + s_sub;
+
+          const badgeContent = s_sub === 'done' 
+            ? '✓' 
+            : s_sub === 'active' 
+            ? '⚡' 
+            : String(idx + 1);
+
+          const durTag = st.duration ? `<span class="subtask-tag dur">⏱ ${st.duration}</span>` : '';
+          const ptoTag = st.pto_trab ? `<span class="subtask-tag pto">${st.pto_trab}</span>` : '';
+          const ejecutorTag = st.ejecutor ? `<span class="subtask-tag ejecutor">👤 ${st.ejecutor}</span>` : '';
+
+          stEl.innerHTML = `
+            <div class="subtask-badge ${s_sub}">${badgeContent}</div>
+            <div class="subtask-content">
+              <div class="subtask-name">${st.name}</div>
+              <div class="subtask-meta">
+                <span class="subtask-window">${fmtTaskWindow(st)}</span>
+                ${durTag}
+                ${ptoTag}
+                ${ejecutorTag}
+              </div>
+            </div>
+          `;
+          subtasksList.appendChild(stEl);
+        });
+      } else {
+        subtasksWrap.hidden = true;
+      }
+    }
+
     drawer.classList.add('show'); drawerBackdrop.classList.add('show');
   }
   function closeDrawer(){ drawer.classList.remove('show'); drawerBackdrop.classList.remove('show'); }

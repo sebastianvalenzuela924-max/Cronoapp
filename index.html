@@ -16,7 +16,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=30" />
+<link rel="stylesheet" href="style.css?v=31" />
 </head>
 <body>
 
@@ -205,6 +205,15 @@
         <div class="drawer-bar-fill" id="drawerProgress"></div>
       </div>
       <div class="drawer-pct" id="drawerPct">0%</div>
+
+      <!-- Sección de Subtareas / Desglose Paso a Paso -->
+      <div class="drawer-subtasks-wrap" id="drawerSubtasksWrap" hidden>
+        <div class="drawer-subtasks-header">
+          <span class="drawer-subtasks-title">📋 Subtareas y Horarios</span>
+          <span class="drawer-subtasks-count" id="drawerSubtasksCount">0 pasos</span>
+        </div>
+        <div class="drawer-subtasks-list" id="drawerSubtasksList"></div>
+      </div>
     </div>
   </aside>
   <div class="drawer-backdrop" id="drawerBackdrop"></div>
@@ -342,7 +351,7 @@
 <script src="data.js"></script>
 <script src="data-sf2-electrico.js"></script>
 <script src="data-sf2-instrumentacion.js"></script>
-<script src="app.js?v=19"></script>
+<script src="app.js?v=20"></script>
 <script src="cronogramas.js"></script>
 <script src="main.js?v=2"></script>
 </body>
