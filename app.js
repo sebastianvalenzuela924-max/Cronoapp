@@ -578,7 +578,7 @@ window.initCronoApp = function(DATA){
           </div>
         `;
         row.addEventListener('click', (e) => {
-          if (window.innerWidth >= 768 && hasSub){
+          if (hasSub){
             if (expandedTasks.has(t.id)) expandedTasks.delete(t.id);
             else expandedTasks.add(t.id);
             renderSystems(scrubTime);
@@ -974,7 +974,7 @@ window.initCronoApp = function(DATA){
 
           taskRow.addEventListener('click', (e) => {
             e.stopPropagation();
-            if (window.innerWidth >= 768 && hasSub){
+            if (hasSub){
               if (expandedTasks.has(t.id)) expandedTasks.delete(t.id);
               else expandedTasks.add(t.id);
               renderOverview(scrubTime);
