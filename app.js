@@ -800,6 +800,7 @@ window.initCronoApp = function(DATA){
       }
     }
 
+    drawer.scrollTop = 0;
     drawer.classList.add('show'); drawerBackdrop.classList.add('show');
   }
   function closeDrawer(){ drawer.classList.remove('show'); drawerBackdrop.classList.remove('show'); }

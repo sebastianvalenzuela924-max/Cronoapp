@@ -538,7 +538,18 @@ body{
   background: var(--bg); border-top:1px solid var(--border);
   border-radius: 22px 22px 0 0; box-shadow: var(--shadow-lg);
   transition: transform .28s cubic-bezier(.2,.8,.2,1);
-  padding: 12px 22px 28px;
+  padding: 12px 22px calc(28px + env(safe-area-inset-bottom));
+  max-height: 88dvh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+.drawer::-webkit-scrollbar {
+  width: 6px;
+}
+.drawer::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 3px;
 }
 .drawer.show{ transform: translate(-50%, 0); }
 .drawer-inner{ position:relative; }
