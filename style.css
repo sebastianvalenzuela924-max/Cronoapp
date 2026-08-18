@@ -1255,45 +1255,46 @@ body{
   display: inline-flex;
   align-items: center;
   gap: 3px;
-  font-size: 11px;
+  font-size: 10.5px;
   font-weight: 800;
-  padding: 2px 8px;
+  padding: 1.5px 7px;
   border-radius: 999px;
   background: rgba(56, 189, 248, 0.15);
   color: #38BDF8;
   border: 1px solid rgba(56, 189, 248, 0.35);
-  margin-left: 8px;
+  margin-left: 6px;
   vertical-align: middle;
 }
 .sys-task.has-subtasks, .overview-task.has-subtasks{
   cursor: pointer;
 }
 .overview-subtasks-tree{
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 10px 14px 12px 20px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+  gap: 5px;
+  padding: 8px 10px 10px 12px;
   background: #0B1120;
   border-left: 3px solid #38BDF8;
   border-right: 1px solid rgba(255, 255, 255, 0.08);
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  margin: 0 0 10px 12px;
-  border-radius: 0 0 12px 12px;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+  margin: 0 0 6px 10px;
+  border-radius: 0 0 10px 10px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
 }
 .subtask-tree-item{
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 9px 12px;
-  border-radius: 10px;
+  gap: 8px;
+  padding: 5px 8px;
+  border-radius: 8px;
   background: #1E293B;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   transition: background .15s ease, border-color .15s ease;
   cursor: pointer;
+  min-width: 0;
 }
 .subtask-tree-item:hover{
-  background: #334155;
+  background: #2D3D54;
   border-color: rgba(56, 189, 248, 0.4);
 }
 .subtask-tree-item.state-active{
@@ -1305,14 +1306,14 @@ body{
   border-color: rgba(16, 185, 129, 0.35);
 }
 .tree-badge{
-  width: 22px;
-  height: 22px;
+  width: 18px;
+  height: 18px;
   border-radius: 50%;
   flex: none;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 11px;
+  font-size: 9.5px;
   font-weight: 900;
 }
 .tree-badge.upcoming{
@@ -1323,7 +1324,7 @@ body{
 .tree-badge.active{
   background: #F59E0B;
   color: #000;
-  box-shadow: 0 0 8px rgba(245, 158, 11, 0.5);
+  box-shadow: 0 0 6px rgba(245, 158, 11, 0.5);
 }
 .tree-badge.done{
   background: #10B981;
@@ -1332,36 +1333,44 @@ body{
 .tree-content{
   flex: 1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
 }
 .tree-name{
-  font-size: 13px;
+  font-size: 11.5px;
   font-weight: 700;
   color: #FFFFFF;
-  line-height: 1.35;
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .subtask-tree-item.state-done .tree-name{
   color: #94A3B8;
 }
 .tree-meta{
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  gap: 5px 8px;
-  margin-top: 4px;
+  gap: 4px;
+  flex-wrap: nowrap;
+  overflow: hidden;
 }
 .tree-window{
-  font-size: 11.5px;
+  font-size: 10px;
   font-weight: 700;
-  color: #E2E8F0;
+  color: #CBD5E1;
+  white-space: nowrap;
 }
 .tree-tag{
-  font-size: 10.5px;
+  font-size: 9.5px;
   font-weight: 700;
-  padding: 2px 7px;
-  border-radius: 6px;
+  padding: 0.5px 5px;
+  border-radius: 4px;
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.12);
   color: #E2E8F0;
+  white-space: nowrap;
 }
 .tree-tag.dur{
   color: #38BDF8;
@@ -1378,8 +1387,75 @@ body{
   border-color: rgba(192, 132, 252, 0.35);
 }
 
-/* ===== DESKTOP MODAL DRAWER OPTIMIZATION ===== */
+/* ===== DESKTOP SCREEN OPTIMIZATIONS ===== */
 @media (min-width: 768px){
+  /* Slim Desktop Scrubber Bar */
+  .scrubber{
+    max-width: 520px !important;
+    padding: 5px 12px 6px 12px !important;
+    bottom: 8px !important;
+    border-radius: 14px !important;
+    box-shadow: 0 10px 28px rgba(10, 15, 30, 0.45) !important;
+  }
+  .scrubber-bubble{
+    top: -34px !important;
+    padding: 4px 12px !important;
+    font-size: 12px !important;
+    border-radius: 10px !important;
+  }
+  .scrubber-bubble b{
+    font-size: 13.5px !important;
+  }
+  .scrubber-bubble span{
+    font-size: 10px !important;
+  }
+  .scrubber-bubble::after{
+    width: 8px !important;
+    height: 8px !important;
+    bottom: -4px !important;
+  }
+  .scrubber-play, .scrubber-live{
+    width: 26px !important;
+    height: 26px !important;
+  }
+  .scrubber-play svg, .scrubber-live svg{
+    width: 13px !important;
+    height: 13px !important;
+  }
+  .wheel-viewport{
+    height: 34px !important;
+    border-radius: 10px !important;
+  }
+  .wheel-tick.major{
+    height: 9px !important;
+    bottom: 4px !important;
+  }
+  .wheel-tick{
+    height: 4px !important;
+    bottom: 4px !important;
+  }
+  .wheel-tick-label{
+    bottom: 15px !important;
+    font-size: 8px !important;
+  }
+  .wheel-day-label{
+    font-size: 8px !important;
+    padding: 1px 4px !important;
+    top: 3px !important;
+  }
+
+  /* Compact Overview on Desktop */
+  .overview-list{
+    padding: 4px 0 90px 0 !important;
+  }
+  .overview-row-head{
+    padding: 6px 18px !important;
+  }
+  .overview-task{
+    padding: 5px 6px !important;
+  }
+
+  /* Desktop Modal Drawer */
   .drawer{
     left: 50% !important;
     bottom: auto !important;
