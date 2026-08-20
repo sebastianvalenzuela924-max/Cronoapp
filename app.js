@@ -444,22 +444,85 @@ window.initCronoApp = function(DATA){
   }
   buildSysRuler();
 
+  function cleanSearchStr(s){
+    if (!s) return '';
+    return String(s)
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replace(/n[°º#\.]/g, 'n ')
+      .replace(/[^a-z0-9]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  function getTaskSearchCorpus(t, cat){
+    if (t._searchCorpus) return t._searchCorpus;
+    const parts = [
+      t.name || '',
+      t.om ? String(t.om) : '',
+      t.eps || '',
+      cat && cat.label ? cat.label : ''
+    ];
+    if (t.subtasks && t.subtasks.length){
+      t.subtasks.forEach(st => {
+        if (st.name) parts.push(st.name);
+        if (st.pto_trab) parts.push(st.pto_trab);
+        if (st.ejecutor) parts.push(st.ejecutor);
+        if (st.duration) parts.push(st.duration);
+      });
+    }
+    const raw = parts.join(' ');
+    const cleaned = cleanSearchStr(raw);
+    const wordsSet = new Set(cleaned.split(' ').filter(Boolean));
+    
+    // Add letter+number joined pairs: 'ppt 4' -> 'ppt4', 'n 4' -> 'n4'
+    const letterNumMatches = cleaned.matchAll(/\b([a-z]+)\s+(\d+)\b/g);
+    for (const m of letterNumMatches){
+      wordsSet.add(m[1] + m[2]);
+    }
+    // Add 'ppt n 4' -> 'ppt4', 'ppt 4'
+    const pptNMatches = cleaned.matchAll(/\b([a-z]+)\s+n\s+(\d+)\b/g);
+    for (const m of pptNMatches){
+      wordsSet.add(m[1] + m[2]);
+      wordsSet.add(m[1] + ' ' + m[2]);
+    }
+    
+    const compact = cleaned.replace(/\s+/g, '');
+    t._searchCorpus = { wordsSet, fullNorm: cleaned, compact };
+    return t._searchCorpus;
+  }
+
   function matchesSearch(t, cat){
     if (!matchesEps(t)) return false;
     if (!searchQuery) return true;
-    const q = searchQuery.toLowerCase();
-    if (t.name && t.name.toLowerCase().includes(q)) return true;
-    if (t.om && String(t.om).toLowerCase().includes(q)) return true;
-    if (t.eps && t.eps.toLowerCase().includes(q)) return true;
-    if (cat && cat.label && cat.label.toLowerCase().includes(q)) return true;
-    if (t.subtasks && t.subtasks.some(st => 
-      (st.name && st.name.toLowerCase().includes(q)) || 
-      (st.pto_trab && st.pto_trab.toLowerCase().includes(q)) || 
-      (st.ejecutor && st.ejecutor.toLowerCase().includes(q))
-    )) {
-      return true;
+    
+    const qClean = cleanSearchStr(searchQuery);
+    const qTokens = qClean.split(' ').filter(Boolean);
+    if (!qTokens.length) return true;
+    
+    const corpus = getTaskSearchCorpus(t, cat);
+    const { wordsSet, fullNorm, compact } = corpus;
+    
+    for (let i = 0; i < qTokens.length; i++){
+      const tok = qTokens[i];
+      // 1. Exact word in corpus words
+      if (wordsSet.has(tok)) continue;
+      // 2. Substring match in normalized full text (for terms >= 2 chars)
+      if (tok.length >= 2 && fullNorm.includes(tok)) continue;
+      // 3. Compact match (e.g. '26123521' or '201498213')
+      const tokCompact = tok.replace(/\s+/g, '');
+      if (tokCompact.length >= 3 && compact.includes(tokCompact)) continue;
+      // 4. Letter + digit breakdown (e.g. 'ppt4' -> check 'ppt4' in words or 'ppt' and '4' both in words)
+      const letterDigitMatch = tok.match(/^([a-z]+)(\d+)$/);
+      if (letterDigitMatch){
+        const w1 = letterDigitMatch[1];
+        const w2 = letterDigitMatch[2];
+        if (wordsSet.has(w1 + w2) || (wordsSet.has(w1) && wordsSet.has(w2))) continue;
+      }
+      return false;
     }
-    return false;
+    return true;
   }
   function matchesFilter(t, now){
     if (activeFilter === 'all') return true;
